@@ -35,6 +35,7 @@
 
   :cljsbuild
   {:builds {
+            
             :app
             {:source-paths ["src/cljs"]
              :figwheel true
@@ -52,6 +53,7 @@
                         :output-to "resources/public/js/compiled/tictactoe.js"
                         :output-dir "resources/public/js/compiled/out/tictactoe"
                         :source-map-timestamp true}}
+
             }}
 
   :figwheel {:server-port 3449

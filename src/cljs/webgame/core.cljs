@@ -1,5 +1,7 @@
 (ns webgame.core
-  (:require [reagent.core :as reagent :refer [atom]]))
+  (:require
+    [reagent.core :as reagent :refer [atom]]
+    ))
 
 (enable-console-print!)
 
@@ -10,6 +12,8 @@
    [:ul
     [:li
      [:a {:href "/tictactoe"} "Tic tac toe"]]
+    [:li
+     "And more to come (hopefully)"]
    ]])
 
 (reagent/render [show-games]

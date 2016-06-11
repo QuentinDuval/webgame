@@ -3,11 +3,14 @@
     [reagent.core :as reagent :refer [atom]]
     ))
 
-(defonce app-state
-  (atom {:text "Hello Chestnut!"}))
+(def app-state
+  (atom
+    {:text "Hopefully tic tac toe soon"}
+  ))
 
-(defn greeting []
+(defn tic-tac-toe
+  []
   [:h1 (:text @app-state)])
 
-(reagent/render [greeting]
+(reagent/render [tic-tac-toe]
   (js/document.getElementById "app"))

@@ -10,10 +10,13 @@
 ;; degraded performance.
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
-(def http-handler
-  (wrap-reload #'webgame.server/http-handler))
+
+(def http-handler (wrap-reload #'webgame.server/http-handler))
 
 (defn run []
-  (figwheel/start-figwheel!))
+  (figwheel/start-figwheel!)
+  (figwheel/start-autobuild "tictactoe"))
+
+(defn stop [] (figwheel/stop-figwheel!))
 
 (def browser-repl figwheel/cljs-repl)
