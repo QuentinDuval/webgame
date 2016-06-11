@@ -28,6 +28,10 @@
           :when (blank? x y)]
       [x y])))
 
+(defn full-board?
+  [board]
+  (empty? (all-empty-cells board)))
+
 (defn computer-move
   [board]
   (let [remaining (all-empty-cells board)
@@ -43,7 +47,7 @@
       (map (fn [[x y]] (get-in board [x y])) line))
     ))
 
-(defn win?
+(defn is-winner?
   "Check the victory condition for the given player on the board"
   [player board]
   (some true?
@@ -52,6 +56,15 @@
           d [[1 0] [0 1] [1 1] [1 -1]]]
       (owns-line? player board [x y] d)
       )))
+
+(defn game-status
+  [board]
+  (cond
+    (is-winner? PLAYER board) :player-victory
+    (is-winner? AI board)     :ai-victory
+    (full-board? board)       :draw-game
+    :else                     :in-progress
+    ))
 
 (defn empty-cell
   [x y]
@@ -63,8 +76,7 @@
           :on-click
           (fn rect-click []
             (swap! app-state assoc-in [:board x y] PLAYER)
-            ;(prn (str (win? PLAYER (:board @app-state))))
-            (when-not (empty? (all-empty-cells (:board @app-state)))
+            (when-not (full-board? (:board @app-state))
               (swap! app-state update-in [:board] computer-move)))
           }])
 
