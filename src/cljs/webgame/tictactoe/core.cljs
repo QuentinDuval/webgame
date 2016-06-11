@@ -66,6 +66,12 @@
     :else                     :in-progress
     ))
 
+(defn on-player-move
+  [x y]
+  (swap! app-state assoc-in [:board x y] PLAYER)
+  (when-not (full-board? (:board @app-state))
+    (swap! app-state update-in [:board] computer-move)))
+
 (defn empty-cell
   [x y]
   [:rect {:width 0.9
@@ -73,11 +79,7 @@
           :x (+ 0.05 x)
           :y (+ 0.05 y)
           :fill "grey"
-          :on-click
-          (fn rect-click []
-            (swap! app-state assoc-in [:board x y] PLAYER)
-            (when-not (full-board? (:board @app-state))
-              (swap! app-state update-in [:board] computer-move)))
+          :on-click #(on-player-move x y)
           }])
 
 (defn circle-cell
