@@ -24,15 +24,15 @@
     (for [x (range SIZE)
           y (range SIZE)
           :when (blank? x y)]
-      [x y]
-      )))
+      [x y])))
 
 (defn computer-move
   []
-  (let [remaining (all-empty-cells (:board @app-state))
-        [x y] (rand-nth remaining)]
-    (swap! app-state assoc-in [:board x y] AI)
-    ))
+  (let [remaining (all-empty-cells (:board @app-state))]
+    (when-not (empty? remaining)
+      (let [[x y] (rand-nth remaining)]
+       (swap! app-state assoc-in [:board x y] AI))
+      )))
 
 (defn empty-cell
   [x y]
