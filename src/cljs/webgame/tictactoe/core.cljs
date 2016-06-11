@@ -89,8 +89,7 @@
           :on-click
           (fn on-rect-click []
             (when (= (:game-status @app-state) :in-progress)
-              (on-player-move x y))
-            )
+              (on-player-move x y)))
           }])
 
 (defn circle-cell
@@ -117,8 +116,15 @@
   []
   [:div
    [:h1 "Tic Tac Toe"]
-   [:p
-    [:button {:on-click #(reset! app-state init-state)} "New game"]]
+   [:h2
+    (case (:game-status @app-state)
+     :player-victory "You won!"
+     :ai-victory "AI won!"
+     :draw-game "Draw game"
+     nil)
+    [:button
+     {:on-click #(reset! app-state init-state)}
+     "New game"]]
    (into 
      [:svg
       {:view-box (str "0 0 " SIZE " " SIZE)
