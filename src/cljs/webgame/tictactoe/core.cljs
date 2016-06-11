@@ -94,10 +94,12 @@
 
 (defn circle-cell
   [x y]
-  [:circle {:r 0.45
+  [:circle {:r 0.4
             :cx (+ x 0.5)
             :cy (+ y 0.5)
-            :fill "green"
+            :stroke "green"
+            :stroke-width 0.1
+            :fill "none"
             }])
 
 (defn cross-cell
