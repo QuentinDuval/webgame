@@ -58,6 +58,7 @@
       )))
 
 (defn game-status
+  "Check the on-going game status"
   [board]
   (cond
     (is-winner? PLAYER board) :player-victory
@@ -69,7 +70,7 @@
 (defn on-player-move
   [x y]
   (swap! app-state assoc-in [:board x y] PLAYER)
-  (when-not (full-board? (:board @app-state))
+  (when (= (game-status (:board @app-state)) :in-progress)
     (swap! app-state update-in [:board] computer-move)))
 
 (defn empty-cell
@@ -79,7 +80,10 @@
           :x (+ 0.05 x)
           :y (+ 0.05 y)
           :fill "grey"
-          :on-click #(on-player-move x y)
+          :on-click
+          (fn on-rect-click []
+            (when (= (game-status (:board @app-state)) :in-progress)
+              (on-player-move x y)))
           }])
 
 (defn circle-cell
