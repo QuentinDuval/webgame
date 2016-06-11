@@ -7,16 +7,20 @@
 ;; Based on: https://www.youtube.com/watch?v=pIiOgTwjbes
 
 (def SIZE 3)
+(def BLANK 0)
+(def PLAYER 1)
+(def AI 2)
 
-(defn new-board []
-  (let [col (vec (repeat SIZE 0))]
+(defn new-board [] ;TODO - Trigger this at applications start
+  (let [col (vec (repeat SIZE BLANK))]
     (vec (repeat SIZE col))))
 
-
 (def app-state
-  (atom
-    {:board (new-board)}
-  ))
+  (atom {:board (new-board)}))
+
+(defn computer-move
+  []
+  (swap! app-state assoc-in [:board 0 0] AI))
 
 (defn empty-cell
   [x y]
@@ -27,7 +31,8 @@
           :fill "grey"
           :on-click
           (fn rect-click []
-            (swap! app-state update-in [:board x y] inc))
+            (swap! app-state assoc-in [:board x y] PLAYER)
+            (computer-move))
           }])
 
 (defn circle-cell
@@ -36,9 +41,6 @@
             :cx (+ x 0.5)
             :cy (+ y 0.5)
             :fill "green"
-            :on-click
-            (fn rect-click []
-              (swap! app-state update-in [:board x y] inc))
             }])
 
 (defn cross-cell
@@ -48,12 +50,9 @@
     :stroke-width 0.1
     :stroke-linecap "round"
     :transform (str "translate(" (+ 0.5 x) "," (+ 0.5 y) ")"
-                    "scale(0.7)")
-    }
-   [:line {:x1 -0.5 :y1 -0.5
-           :x2 0.5 :y2 0.5}]
-   [:line {:x1 -0.5 :y1 0.5
-           :x2 0.5 :y2 -0.5}]
+                    "scale(0.7)")}
+   [:line {:x1 -0.5 :y1 -0.5 :x2 0.5 :y2 0.5}]
+   [:line {:x1 -0.5 :y1 0.5 :x2 0.5 :y2 -0.5}]
   ])
 
 (defn new-game
@@ -74,10 +73,10 @@
      (for [x (range SIZE)
            y (range SIZE)]
        ^{:key [x y]}
-       (case (get-in @app-state [:board x y])
-         0 [empty-cell x y]
-         1 [circle-cell x y]
-         2 [cross-cell x y])
+       (condp = (get-in @app-state [:board x y])
+         BLANK  [empty-cell x y]
+         PLAYER [circle-cell x y]
+         AI     [cross-cell x y])
        ))
    ])
 
