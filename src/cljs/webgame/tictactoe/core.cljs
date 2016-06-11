@@ -56,10 +56,16 @@
            :x2 0.5 :y2 -0.5}]
   ])
 
+(defn new-game
+  []
+  (swap! app-state assoc-in [:board] (new-board)))
+
 (defn tic-tac-toe
   []
   [:div
    [:h1 "Tic Tac Toe"]
+   [:p
+    [:button {:on-click new-game} "New game"]]
    (into 
      [:svg
       {:view-box (str "0 0 " SIZE " " SIZE)
