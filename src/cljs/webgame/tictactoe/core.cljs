@@ -18,9 +18,21 @@
 (def app-state
   (atom {:board (new-board)}))
 
+(defn all-empty-cells
+  [board]
+  (let [blank? #(= BLANK (get-in board [%1 %2]))]
+    (for [x (range SIZE)
+          y (range SIZE)
+          :when (blank? x y)]
+      [x y]
+      )))
+
 (defn computer-move
   []
-  (swap! app-state assoc-in [:board 0 0] AI))
+  (let [remaining (all-empty-cells (:board @app-state))
+        [x y] (rand-nth remaining)]
+    (swap! app-state assoc-in [:board x y] AI)
+    ))
 
 (defn empty-cell
   [x y]
