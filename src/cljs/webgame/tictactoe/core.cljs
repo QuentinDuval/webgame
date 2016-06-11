@@ -17,8 +17,11 @@
   (let [col (vec (repeat SIZE BLANK))]
     (vec (repeat SIZE col))))
 
-(def app-state
-  (atom {:board (new-board)}))
+(def init-state
+  {:board (new-board)
+   :game-status :in-progress })
+
+(def app-state (atom init-state))
 
 (defn all-empty-cells
   [board]
@@ -71,7 +74,10 @@
   [x y]
   (swap! app-state assoc-in [:board x y] PLAYER)
   (when (= (game-status (:board @app-state)) :in-progress)
-    (swap! app-state update-in [:board] computer-move)))
+    (swap! app-state update-in [:board] computer-move))
+  (swap! app-state assoc-in [:game-status]
+    (game-status (:board @app-state)))
+  )
 
 (defn empty-cell
   [x y]
@@ -82,8 +88,9 @@
           :fill "grey"
           :on-click
           (fn on-rect-click []
-            (when (= (game-status (:board @app-state)) :in-progress)
-              (on-player-move x y)))
+            (when (= (:game-status @app-state) :in-progress)
+              (on-player-move x y))
+            )
           }])
 
 (defn circle-cell
@@ -106,16 +113,12 @@
    [:line {:x1 -0.5 :y1 0.5 :x2 0.5 :y2 -0.5}]
   ])
 
-(defn new-game
-  []
-  (swap! app-state assoc-in [:board] (new-board)))
-
 (defn tic-tac-toe
   []
   [:div
    [:h1 "Tic Tac Toe"]
    [:p
-    [:button {:on-click new-game} "New game"]]
+    [:button {:on-click #(reset! app-state init-state)} "New game"]]
    (into 
      [:svg
       {:view-box (str "0 0 " SIZE " " SIZE)
