@@ -27,12 +27,10 @@
       [x y])))
 
 (defn computer-move
-  []
-  (let [remaining (all-empty-cells (:board @app-state))]
-    (when-not (empty? remaining)
-      (let [[x y] (rand-nth remaining)]
-       (swap! app-state assoc-in [:board x y] AI))
-      )))
+  [board]
+  (let [remaining (all-empty-cells board)
+        [x y] (rand-nth remaining)]
+    (assoc-in board [x y] AI)))
 
 (defn empty-cell
   [x y]
@@ -44,7 +42,8 @@
           :on-click
           (fn rect-click []
             (swap! app-state assoc-in [:board x y] PLAYER)
-            (computer-move))
+            (when-not (empty? (all-empty-cells (:board @app-state)))
+              (swap! app-state update-in [:board] computer-move)))
           }])
 
 (defn circle-cell
