@@ -4,6 +4,8 @@
     ))
 
 
+(enable-console-print!)
+
 ;; Based on: https://www.youtube.com/watch?v=pIiOgTwjbes
 
 (def SIZE 3)
@@ -32,6 +34,25 @@
         [x y] (rand-nth remaining)]
     (assoc-in board [x y] AI)))
 
+(defn owns-line?
+  "Checks if a player has the whole line"
+  [player board [x y] [dx dy]]
+  (let [line (for [i (range SIZE)]
+               [(+ x (* dx i)) (+ y (* dy i))])]
+    (every? #(= player %)
+      (map (fn [[x y]] (get-in board [x y])) line))
+    ))
+
+(defn win?
+  "Check the victory condition for the given player on the board"
+  [player board]
+  (some true?
+    (for [x (range SIZE)
+          y (range SIZE)
+          d [[1 0] [0 1] [1 1] [1 -1]]]
+      (owns-line? player board [x y] d)
+      )))
+
 (defn empty-cell
   [x y]
   [:rect {:width 0.9
@@ -42,6 +63,7 @@
           :on-click
           (fn rect-click []
             (swap! app-state assoc-in [:board x y] PLAYER)
+            ;(prn (str (win? PLAYER (:board @app-state))))
             (when-not (empty? (all-empty-cells (:board @app-state)))
               (swap! app-state update-in [:board] computer-move)))
           }])
