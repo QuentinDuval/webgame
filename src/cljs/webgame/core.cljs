@@ -8,7 +8,8 @@
   [:div
    [:h1 "List of all games"]
    [:ul
-    [:li "Tic Tac Toe"]
+    [:li
+     [:a {:href "/tictactoe"} "Tic tac toe"]]
    ]])
 
 (reagent/render [show-games]
