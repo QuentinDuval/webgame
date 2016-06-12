@@ -51,7 +51,7 @@
   []
   (reagent/create-class
     {:component-did-mount
-     (fn yolo []
+     (fn did-mount []
        (let [ship-canvas (canvas/init (js/document.getElementById "board") "2d")]
          (canvas/add-entity ship-canvas :ship-entity (make-ship-entity ship))
          (canvas/draw-loop ship-canvas)
@@ -60,15 +60,12 @@
      :reagent-render
      (fn render []
        [:div
-        [:h1 "TODO"]
+        [:h1 "Space ship"]
         [:button
          {:on-click (fn [] (swap! ship update-in [:x] dec))}
          "Left"]
-        [:canvas#board
-         {:width 500
-          :height 500}
-         ]]
-       )
+        [:canvas#board {:width 500 :height 500}]
+       ])
      }))
 
 
