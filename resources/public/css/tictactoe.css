@@ -9,6 +9,8 @@ body
 {
   	background: #f9f9f9;
   	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  	font-weight: 100;
+  	font-size: 14px;
 }
 
 .app

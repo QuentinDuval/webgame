@@ -125,13 +125,13 @@
   "Main renderer for the tic-tac-toe"
   []
   [:div.app
-   [:h1 "Tic Tac Toe"]
-   [:h2
+   [:h1
     (case (:game-status @app-state)
      :player-victory "You won!"
      :ai-victory "AI won!"
      :draw-game "Draw game"
-     nil)
+     "Tic Tac Toe")]
+   [:h2
     [:button#new-game
      {:on-click #(reset! app-state init-state)}
      "New game"]]
