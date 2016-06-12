@@ -3,17 +3,16 @@
     [reagent.core :as reagent :refer [atom]]
     ))
 
-
-(enable-console-print!)
-
 ;; Based on: https://www.youtube.com/watch?v=pIiOgTwjbes
 
-(def SIZE 3)
+(def SIZE 3) ; Change the size to play enhanced tic-tac-toe
 (def BLANK 0)
 (def PLAYER 1)
 (def AI 2)
 
-(defn new-board []
+(defn new-board
+  "Create new empty board"
+  []
   (let [col (vec (repeat SIZE BLANK))]
     (vec (repeat SIZE col))))
 
@@ -21,7 +20,8 @@
   {:board (new-board)
    :game-status :in-progress })
 
-(def app-state (atom init-state))
+(def app-state
+  (atom init-state))
 
 (defn all-empty-cells
   "Return the coordinates of all cells that are empty"
@@ -131,10 +131,9 @@
      :ai-victory "AI won!"
      :draw-game "Draw game"
      "Tic Tac Toe")]
-   [:h2
-    [:button#new-game
-     {:on-click #(reset! app-state init-state)}
-     "New game"]]
+   [:button#new-game
+    {:on-click #(reset! app-state init-state)}
+    "New game"]
    (into 
      [:svg#board
       {:view-box (str "0 0 " SIZE " " SIZE)}]
