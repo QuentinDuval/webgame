@@ -5,15 +5,18 @@
 
 (enable-console-print!)
 
+(defn game-item
+  [link name]
+  [:li.game-list
+   [:a {:href link} name]])
+
 (defn show-games
   []
-  [:div
-   [:h1 "List of all games"]
+  [:div.app
+   [:h1 "Available games"]
    [:ul
-    [:li
-     [:a {:href "/tictactoe"} "Tic tac toe"]]
-    [:li
-     "And more to come (hopefully)"]
+    [game-item "/tictactoe" "Tic Tac Toe"]
+    [game-item nil "Not yet implemented"]
    ]])
 
 (reagent/render [show-games]
