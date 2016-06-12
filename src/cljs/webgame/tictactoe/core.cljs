@@ -13,7 +13,7 @@
 (def PLAYER 1)
 (def AI 2)
 
-(defn new-board [] ;TODO - Trigger this at applications start
+(defn new-board []
   (let [col (vec (repeat SIZE BLANK))]
     (vec (repeat SIZE col))))
 
@@ -24,6 +24,7 @@
 (def app-state (atom init-state))
 
 (defn all-empty-cells
+  "Return the coordinates of all cells that are empty"
   [board]
   (let [blank? #(= BLANK (get-in board [%1 %2]))]
     (for [x (range SIZE)
@@ -32,10 +33,12 @@
       [x y])))
 
 (defn full-board?
+  "Indicates if all cells are empty"
   [board]
   (empty? (all-empty-cells board)))
 
 (defn computer-move
+  "The (dummy) code for tha AI: plays a random move"
   [board]
   (let [remaining (all-empty-cells board)
         [x y] (rand-nth remaining)]
@@ -71,6 +74,7 @@
     ))
 
 (defn on-player-move
+  "The game logic, that occurs upon player click"
   [x y]
   (swap! app-state assoc-in [:board x y] PLAYER)
   (when (= (game-status (:board @app-state)) :in-progress)
@@ -80,6 +84,7 @@
   )
 
 (defn empty-cell
+  "Draws an empty cell"
   [x y]
   [:rect {:width 0.9
           :height 0.9
@@ -93,6 +98,7 @@
           }])
 
 (defn circle-cell
+  "Draws a cycle"
   [x y]
   [:circle {:r 0.4
             :cx (+ x 0.5)
@@ -103,6 +109,7 @@
             }])
 
 (defn cross-cell
+  "Draws a cross"
   [x y]
   [:g
    {:stroke "darkred"
@@ -115,8 +122,9 @@
   ])
 
 (defn tic-tac-toe
+  "Main renderer for the tic-tac-toe"
   []
-  [:div
+  [:div.app
    [:h1 "Tic Tac Toe"]
    [:h2
     (case (:game-status @app-state)
@@ -124,14 +132,12 @@
      :ai-victory "AI won!"
      :draw-game "Draw game"
      nil)
-    [:button
+    [:button#new-game
      {:on-click #(reset! app-state init-state)}
      "New game"]]
    (into 
-     [:svg
-      {:view-box (str "0 0 " SIZE " " SIZE)
-       :width 500
-       :height 500}]
+     [:svg#board
+      {:view-box (str "0 0 " SIZE " " SIZE)}]
      (for [x (range SIZE)
            y (range SIZE)]
        ^{:key [x y]}
