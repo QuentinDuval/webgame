@@ -75,8 +75,8 @@
          (canvas/draw-loop ship-canvas)
          
          (let [send-chan (event-loop)]
-           (set! (.-onkeydown js/document) #(put! send-chan [::down (.-keycode %)]))
-           (set! (.-onkeyup js/document) #(put! send-chan [::up (.-keycode %)])))
+           (set! (.-onkeydown js/document) #(put! send-chan [::down (.-which %)]))
+           (set! (.-onkeyup js/document) #(put! send-chan [::up (.-which %)])))
          ))
      
      :reagent-render
