@@ -52,9 +52,12 @@
   (reagent/create-class
     {:component-did-mount
      (fn did-mount []
+       (prn "initialize")
        (let [ship-canvas (canvas/init (js/document.getElementById "board") "2d")]
          (canvas/add-entity ship-canvas :ship-entity (make-ship-entity ship))
          (canvas/draw-loop ship-canvas)
+         (set! (.-onkeydown js/document) #(prn "down"))
+         (set! (.-onkeyup js/document) #(prn "up"))
          ))
      
      :reagent-render
