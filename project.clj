@@ -53,6 +53,16 @@
                         :output-to "resources/public/js/compiled/tictactoe.js"
                         :output-dir "resources/public/js/compiled/out/tictactoe"
                         :source-map-timestamp true}}
+            
+            :spaceship
+            {:source-paths ["src/cljs"]
+             :figwheel true
+             :compiler {:main webgame.spaceship.core
+                        :asset-path "js/compiled/out/spaceship"
+                        :output-to "resources/public/js/compiled/spaceship.js"
+                        :output-dir "resources/public/js/compiled/out/spaceship"
+                        :source-map-timestamp true}}
+            
 
             }}
 
@@ -98,6 +108,12 @@
                   :pretty-print false}}
                 
                 :tictactoe
+                {:source-paths ^:replace ["src/cljs"]
+                 :compiler
+                 {:optimizations :advanced
+                  :pretty-print false}}
+                
+                :spaceship
                 {:source-paths ^:replace ["src/cljs"]
                  :compiler
                  {:optimizations :advanced

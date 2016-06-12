@@ -15,6 +15,7 @@
 
 (defn run []
   (figwheel/start-figwheel!)
+  (figwheel/start-autobuild "spaceship")
   (figwheel/start-autobuild "tictactoe"))
 
 (defn stop [] (figwheel/stop-figwheel!))

@@ -15,8 +15,8 @@
   [:div.app
    [:h1 "Available games"]
    [:ul
+    [game-item "/spaceship" "Space Ship"]
     [game-item "/tictactoe" "Tic Tac Toe"]
-    [game-item nil "Not yet implemented"]
    ]])
 
 (reagent/render [show-games]

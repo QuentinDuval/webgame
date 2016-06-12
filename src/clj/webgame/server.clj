@@ -11,18 +11,16 @@
 
 ;; -----------------------------------------------------
 
+(defn html-content
+  [file-path]
+  {:status 200
+   :headers {"Content-Type" "text/html; charset=utf-8"}
+   :body (io/input-stream (io/resource file-path))})
+
 (defroutes routes
-  
-  (GET "/" _
-    {:status 200
-     :headers {"Content-Type" "text/html; charset=utf-8"}
-     :body (io/input-stream (io/resource "public/index.html"))})
-  
-  (GET "/tictactoe" _
-    {:status 200
-     :headers {"Content-Type" "text/html; charset=utf-8"}
-     :body (io/input-stream (io/resource "public/tictactoe.html"))})
-  
+  (GET "/" _ (html-content "public/index.html"))
+  (GET "/spaceship" _ (html-content "public/spaceship.html"))
+  (GET "/tictactoe" _ (html-content "public/tictactoe.html"))
   (resources "/"))
 
 ;; -----------------------------------------------------
