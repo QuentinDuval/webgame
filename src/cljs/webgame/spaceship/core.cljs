@@ -1,13 +1,17 @@
 (ns webgame.spaceship.core 
   (:require
+    [cljs.core.async :refer [put! chan <!]]
     [monet.canvas :as canvas]
-    [monet.geometry :as geom] 
-    [reagent.core :as reagent :refer [atom]]
-    ))
+    [monet.geometry :as geom]
+    [reagent.core :as reagent :refer [atom]])
+  (:require-macros
+    [cljs.core.async.macros :refer [go go-loop]]
+  ))
 
 (enable-console-print!)
 
 ;; https://github.com/rm-hull/monet
+;; https://github.com/Day8/re-frame/wiki/Creating-Reagent-Components
 
 ;; ---------------------------------------------------
 
@@ -47,6 +51,19 @@
         ))
     ))
 
+(defn event-loop
+  []
+  (let [input-chan (chan)]
+    (go-loop [keys #{}]
+     (let [[msg key] (<! input-chan)
+           new-keys (case msg
+                      ::down (conj keys key)
+                      ::up (disj keys key))]
+       (prn new-keys)
+       (recur new-keys))
+     )
+    input-chan))
+
 (defn space-ship
   []
   (reagent/create-class
@@ -56,8 +73,10 @@
        (let [ship-canvas (canvas/init (js/document.getElementById "board") "2d")]
          (canvas/add-entity ship-canvas :ship-entity (make-ship-entity ship))
          (canvas/draw-loop ship-canvas)
-         (set! (.-onkeydown js/document) #(prn "down"))
-         (set! (.-onkeyup js/document) #(prn "up"))
+         
+         (let [send-chan (event-loop)]
+           (set! (.-onkeydown js/document) #(put! send-chan [::down (.-keycode %)]))
+           (set! (.-onkeyup js/document) #(put! send-chan [::up (.-keycode %)])))
          ))
      
      :reagent-render
