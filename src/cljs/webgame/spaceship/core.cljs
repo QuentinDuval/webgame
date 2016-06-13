@@ -24,6 +24,7 @@
   (atom init-ship))
 
 (defn make-ship-entity
+  "Create a display ship entity for the provided ship atom"
   [ship]
   (canvas/entity
     {:x (:x @ship)
@@ -52,6 +53,7 @@
     ))
 
 (defn event-loop
+  "TEMPORARY - assemble the keys events to know which keys are pressed"
   []
   (let [input-chan (chan)]
     (go-loop [keys #{}]
