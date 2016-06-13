@@ -67,6 +67,7 @@
     input-chan))
 
 (defn space-ship
+  "Render the space ship game"
   []
   (reagent/create-class
     {:component-did-mount
