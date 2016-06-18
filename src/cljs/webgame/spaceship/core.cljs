@@ -71,7 +71,6 @@
   (-> ctx
     (canvas/save)
     (canvas/translate (:x ship) (:y ship))
-    ;(canvas/rotate (:angle ship))
     (canvas/begin-path)
     (canvas/move-to (- SHIP-W) 0)
     (canvas/line-to SHIP-W 0)
@@ -119,7 +118,6 @@
     (canvas/save)
     (canvas/translate (:x bullet) (:y bullet))
     (canvas/fill-style "red")
-    ;(canvas/circle {:x 0 :y 0 :r 15}) ; Does not work
     (canvas/fill-rect {:x -3 :y (- (+ SHIP-H 3)) :w 6 :h 6})
     (canvas/restore)
     ))
@@ -138,13 +136,23 @@
 
 (defn create-bullet
   [bullets {:keys [x y] :as ship}]
-  (if (pos? @fire-pressed) ; TODO - This results in far too many bullets - Just count the keydown
+  (if (pos? @fire-pressed)
     (do
       (swap! fire-pressed dec)
       (conj bullets {:x x :y y}))
     bullets
     ))
 
+
+;; ---------------------------------------------------
+;; 
+;; ---------------------------------------------------
+
+
+
+
+;; ---------------------------------------------------
+;; GAME LOOP
 ;; ---------------------------------------------------
 
 (def init-state
@@ -152,6 +160,7 @@
    {:x (/ WIDTH 2)
     :y (/ (+ MAX-H MIN-H) 2)}
    :bullets []
+   :asteroids []
    })
 
 (defn main-game-entity
