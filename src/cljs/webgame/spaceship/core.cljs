@@ -25,16 +25,6 @@
 (def MAX-H SHIP-H)
 (def MIN-H 500)
 
-(def init-ship
-  {:x (/ WIDTH 2)
-   :y (/ (+ MAX-H MIN-H) 2)
-  })
-
-(def init-state
-  {:ship init-ship
-   :bullets []
-   })
-
 (def DOWN 40)
 (def RIGHT 39)
 (def UP 38)
@@ -44,6 +34,9 @@
 
 (def commands (atom #{}))
 
+
+;; ---------------------------------------------------
+;; SHIP
 ;; ---------------------------------------------------
 
 (defn draw-ship
@@ -52,7 +45,7 @@
   (-> ctx
     (canvas/save)
     (canvas/translate (:x ship) (:y ship))
-    (canvas/rotate (:angle ship))
+    ;(canvas/rotate (:angle ship))
     (canvas/begin-path)
     (canvas/move-to (- SHIP-W) 0)
     (canvas/line-to SHIP-W 0)
@@ -89,16 +82,51 @@
     box-position
     ))
 
+
 ;; ---------------------------------------------------
+;; BULLET
+;; ---------------------------------------------------
+
+(defn draw-bullet
+  [ctx bullet]
+  (-> ctx
+    (canvas/save)
+    (canvas/translate (:x bullet) (:y bullet))
+    (canvas/fill-style "red")
+    (canvas/circle {:x 0 :y 0 :r 5})
+    (canvas/restore)
+    ))
+
+(defn update-bullets
+  [bullets]
+  bullets)
+
+;; ---------------------------------------------------
+
+(def init-state
+  {:ship {:x (/ WIDTH 2)
+          :y (/ (+ MAX-H MIN-H) 2)}
+   :bullets []
+   })
 
 (defn main-game-entity
   "Create a display ship entity for the provided ship atom"
   []
   (canvas/entity
-    init-ship
-    update-ship
-    draw-ship
+    init-state
+    (fn update [state]
+      (-> state
+        (update :ship update-ship)
+        (update :bullets update-bullets)
+        ))
+    (fn draw [ctx state]
+      (draw-ship ctx (:ship state))
+      (for [b (:bullets state)]
+        (draw-bullet ctx b))
+      )
     ))
+
+;; ---------------------------------------------------
 
 (defn event-listener
   "Listener for key board events, and output the result in the provided ref"
@@ -135,6 +163,7 @@
        ])
      }))
 
+;; ---------------------------------------------------
 
 (reagent/render [space-ship-game]
   (js/document.getElementById "app"))
