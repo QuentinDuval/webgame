@@ -38,6 +38,7 @@
 ;; ---------------------------------------------------
 
 (def key-pressed (atom #{}))
+(def fire-pressed (atom 0))
 
 (defn event-listener
   "Listener for key board events, and output the result in the provided ref"
@@ -49,7 +50,11 @@
         (when (#{LEFT RIGHT UP DOWN SPACE ESCAPE} k)
           (case msg
             ::down (swap! key-pressed conj k)
-            ::up (swap! key-pressed disj k)))
+            ::up (do
+                   (when (= k SPACE)
+                     (swap! fire-pressed inc))
+                   (swap! key-pressed disj k))
+            ))
         (recur)))
     (set! (.-onkeydown js/document) #(put! input-chan [::down (.-which %)]))
     (set! (.-onkeyup js/document) #(put! input-chan [::up (.-which %)]))
@@ -133,8 +138,10 @@
 
 (defn create-bullet
   [bullets {:keys [x y] :as ship}]
-  (if (@key-pressed SPACE) ; TODO - This results in far too many bullets - Just count the keydown
-    (conj bullets {:x x :y y})
+  (if (pos? @fire-pressed) ; TODO - This results in far too many bullets - Just count the keydown
+    (do
+      (swap! fire-pressed dec)
+      (conj bullets {:x x :y y}))
     bullets
     ))
 
