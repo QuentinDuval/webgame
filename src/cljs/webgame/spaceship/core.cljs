@@ -32,7 +32,28 @@
 (def SPACE 32)
 (def ESCAPE 27)
 
+
+;; ---------------------------------------------------
+;; EVENTS
+;; ---------------------------------------------------
+
 (def key-pressed (atom #{}))
+
+(defn event-listener
+  "Listener for key board events, and output the result in the provided ref"
+  []
+  (let [input-chan (chan)]
+    (reset! key-pressed #{})
+    (go-loop []
+      (let [[msg k] (<! input-chan)]
+        (when (#{LEFT RIGHT UP DOWN SPACE ESCAPE} k)
+          (case msg
+            ::down (swap! key-pressed conj k)
+            ::up (swap! key-pressed disj k)))
+        (recur)))
+    (set! (.-onkeydown js/document) #(put! input-chan [::down (.-which %)]))
+    (set! (.-onkeyup js/document) #(put! input-chan [::up (.-which %)]))
+    ))
 
 
 ;; ---------------------------------------------------
@@ -145,22 +166,6 @@
     ))
 
 ;; ---------------------------------------------------
-
-(defn event-listener
-  "Listener for key board events, and output the result in the provided ref"
-  []
-  (let [input-chan (chan)]
-    (reset! key-pressed #{})
-    (go-loop []
-      (let [[msg k] (<! input-chan)]
-        (when (#{LEFT RIGHT UP DOWN SPACE ESCAPE} k)
-          (case msg
-            ::down (swap! key-pressed conj k)
-            ::up (swap! key-pressed disj k)))
-        (recur)))
-    (set! (.-onkeydown js/document) #(put! input-chan [::down (.-which %)]))
-    (set! (.-onkeyup js/document) #(put! input-chan [::up (.-which %)]))
-    ))
 
 (defn space-ship-game
   "Render the space ship game"
