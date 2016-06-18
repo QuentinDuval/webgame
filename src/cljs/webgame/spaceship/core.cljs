@@ -18,9 +18,16 @@
 (def WIDTH 500)
 (def HEIGHT 500)
 
+(def SHIP-W 12)
+(def SHIP-H 22)
+(def MAX-W (- WIDTH SHIP-W))
+(def MIN-W SHIP-W)
+(def MAX-H SHIP-H)
+(def MIN-H 500)
+
 (def init-ship
   {:x (/ WIDTH 2)
-   :y (- HEIGHT 50)
+   :y (/ (+ MAX-H MIN-H) 2)
   })
 
 (def init-state
@@ -47,20 +54,29 @@
     (canvas/translate (:x ship) (:y ship))
     (canvas/rotate (:angle ship))
     (canvas/begin-path)
-    (canvas/move-to -12 0)
-    (canvas/line-to 12 0)
-    (canvas/line-to 0 -22)
+    (canvas/move-to (- SHIP-W) 0)
+    (canvas/line-to SHIP-W 0)
+    (canvas/line-to 0 (- SHIP-H))
     (canvas/fill)
     (canvas/restore)
     ))
 
 (defn command-move!
-  [{:keys [x y] :as entity} key [dx dy]]
+  [{:keys [x y] :as ship} key [dx dy]]
   (if (@commands key)
-    (-> entity
+    (-> ship
       (update :x #(+ % dx))
       (update :y #(+ % dy)))
-    entity))
+    ship))
+
+(defn box-position
+  [{:keys [x y] :as ship}]
+  (-> ship
+    (update :x #(min % MAX-W))
+    (update :x #(max % MIN-W))
+    (update :y #(min % MIN-H))
+    (update :y #(max % MAX-H))
+    ))
 
 (defn update-ship
   "Update the ship based on the commands pushed"
@@ -70,6 +86,7 @@
     (command-move! DOWN [0 1])
     (command-move! LEFT [-1 0])
     (command-move! RIGHT [1 0])
+    box-position
     ))
 
 ;; ---------------------------------------------------
