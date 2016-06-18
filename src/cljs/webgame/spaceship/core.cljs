@@ -153,9 +153,9 @@
     (reset! key-pressed #{})
     (go-loop []
       (let [[msg k] (<! input-chan)]
-        (case msg
+          (case msg
             ::down (swap! key-pressed conj k)
-            ::up (swap! key-pressed disj k))
+            ::up (swap! key-pressed disj k)))
         (recur)))
     (set! (.-onkeydown js/document) #(put! input-chan [::down (.-which %)]))
     (set! (.-onkeyup js/document) #(put! input-chan [::up (.-which %)]))
