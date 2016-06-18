@@ -91,25 +91,28 @@
 
 ;; ---------------------------------------------------
 
-(defn make-ship-entity
+(defn main-game-entity
   "Create a display ship entity for the provided ship atom"
-  [ship]
+  []
   (canvas/entity
-    ship
+    init-ship
     update-ship
     draw-ship
     ))
 
-(defn event-loop
-  []
+(defn event-listener
+  "Listener for key board events, and output the result in the provided ref"
+  [output-ref]
   (let [input-chan (chan)]
     (go-loop [keys #{}]
-      (reset! commands keys)
+      (reset! output-ref keys)
       (let [[msg k] (<! input-chan)
             new-keys (case msg
                        ::down (conj keys k)
                        ::up (disj keys k))]
         (recur new-keys)))
+    
+    
     input-chan))
 
 (defn space-ship-game
@@ -118,16 +121,13 @@
   (reagent/create-class
     {:component-did-mount
      (fn did-mount []
-       (prn "initialize")
        (let [ship-canvas (canvas/init (js/document.getElementById "board") "2d")]
-         (canvas/add-entity ship-canvas :ship-entity (make-ship-entity init-ship))
+         (canvas/add-entity ship-canvas :ship-entity (main-game-entity))
          (canvas/draw-loop ship-canvas)
-         
-         (let [send-chan (event-loop)]
+         (let [send-chan (event-listener commands)]
            (set! (.-onkeydown js/document) #(put! send-chan [::down (.-which %)]))
            (set! (.-onkeyup js/document) #(put! send-chan [::up (.-which %)])))
          ))
-     
      :reagent-render
      (fn render []
        [:div
