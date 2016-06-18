@@ -93,19 +93,28 @@
     (canvas/save)
     (canvas/translate (:x bullet) (:y bullet))
     (canvas/fill-style "red")
-    (canvas/circle {:x 0 :y 0 :r 5})
+    ;(canvas/circle {:x 0 :y 0 :r 15}) ; Does not work
+    (canvas/fill-rect {:x -3 :y (- SHIP-H) :w 6 :h 6})
     (canvas/restore)
     ))
 
-(defn update-bullets
-  [bullets]
-  bullets)
+(defn update-bullet
+  [bullet]
+  bullet)
+
+(defn create-bullet
+  [bullets {:keys [x y] :as ship}]
+  (if (@commands SPACE) ; TODO - This results in far too many bullets - Just count the keydown
+    (conj bullets {:x x :y y})
+    bullets
+    ))
 
 ;; ---------------------------------------------------
 
 (def init-state
-  {:ship {:x (/ WIDTH 2)
-          :y (/ (+ MAX-H MIN-H) 2)}
+  {:ship
+   {:x (/ WIDTH 2)
+    :y (/ (+ MAX-H MIN-H) 2)}
    :bullets []
    })
 
@@ -114,14 +123,15 @@
   []
   (canvas/entity
     init-state
-    (fn update [state]
+    (fn [state]
       (-> state
+        (update :bullets #(mapv update-bullet %))
+        (update :bullets create-bullet (:ship state))
         (update :ship update-ship)
-        (update :bullets update-bullets)
         ))
-    (fn draw [ctx state]
+    (fn [ctx state]
       (draw-ship ctx (:ship state))
-      (for [b (:bullets state)]
+      (doseq [b (:bullets state)]
         (draw-bullet ctx b))
       )
     ))
@@ -132,14 +142,13 @@
   "Listener for key board events, and output the result in the provided ref"
   [output-ref]
   (let [input-chan (chan)]
-    (go-loop [keys #{}]
-      (reset! output-ref keys)
+    (reset! output-ref #{})
+    (go-loop []
       (let [[msg k] (<! input-chan)]
-        (recur
-          (case msg
-            ::down (conj keys k)
-            ::up (disj keys k))
-          )))
+        (case msg
+            ::down (swap! output-ref conj k)
+            ::up (swap! output-ref disj k))
+        (recur)))
     (set! (.-onkeydown js/document) #(put! input-chan [::down (.-which %)]))
     (set! (.-onkeyup js/document) #(put! input-chan [::up (.-which %)]))
     ))
