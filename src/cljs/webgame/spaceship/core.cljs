@@ -47,36 +47,38 @@
 
 ;; ---------------------------------------------------
 
-(defn command-move!
-  [[dx dy]]
-  (swap! game-state update-in [:ship]
-    (fn [ship]
-      (-> ship
-        (update :x #(+ % dx))
-        (update :y #(+ % dy))
-        ))
+(defn command-move
+  [ship [dx dy]]
+  (-> ship
+    (update :x #(+ % dx))
+    (update :y #(+ % dy))
     ))
 
-(defn box-position!
-  []
-  (swap! game-state update-in [:ship]
-    (fn [ship]
-      (-> ship
-        (update :x #(min % MAX-W))
-        (update :x #(max % MIN-W))
-        (update :y #(min % MIN-H))
-        (update :y #(max % MAX-H))))
+(defn box-position
+  [ship]
+  (-> ship
+    (update :x #(min % MAX-W))
+    (update :x #(max % MIN-W))
+    (update :y #(min % MIN-H))
+    (update :y #(max % MAX-H))
     ))
+
+(def commands
+  [[UP #(command-move % [0 -1])]
+   [DOWN #(command-move % [0 1])]
+   [LEFT #(command-move % [-1 0])]
+   [RIGHT #(command-move % [1 0])]
+  ])
 
 (defn move-ship!
   "Update the ship based on the commands pushed"
   [keys]
-  (when (keys UP) (command-move! [0 -1]))
-  (when (keys DOWN) (command-move! [0 1]))
-  (when (keys LEFT) (command-move! [-1 0]))
-  (when (keys RIGHT) (command-move! [1 0]))
-  (box-position!)
-  )
+  (swap! game-state update-in [:ship]
+   (fn [ship]
+     (let [to-apply (map second (filter #(keys (first %)) commands))
+           next-ship (reduce #(%2 %1) ship to-apply)]
+       (box-position next-ship)))
+   ))
 
 ;; ---------------------------------------------------
 
@@ -87,15 +89,14 @@
     (< 0 y) (< x HEIGHT)
     ))
 
-(def move-bullets
+(def move-bullets-xf
   (comp
     (map #(update % :y - 2))
     (filter keep-bullet)))
 
-(defn move-bullets!
-  []
+(defn move-bullets! []
   (swap! game-state update-in [:bullets]
-    #(into [] move-bullets %)
+    #(into [] move-bullets-xf %)
     ))
 
 (defn create-bullet!
