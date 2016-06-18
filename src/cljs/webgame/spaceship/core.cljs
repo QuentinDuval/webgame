@@ -32,7 +32,7 @@
 (def SPACE 32)
 (def ESCAPE 27)
 
-(def commands (atom #{}))
+(def key-pressed (atom #{}))
 
 
 ;; ---------------------------------------------------
@@ -56,7 +56,7 @@
 
 (defn command-move!
   [{:keys [x y] :as ship} key [dx dy]]
-  (if (@commands key)
+  (if (@key-pressed key)
     (-> ship
       (update :x #(+ % dx))
       (update :y #(+ % dy)))
@@ -112,7 +112,7 @@
 
 (defn create-bullet
   [bullets {:keys [x y] :as ship}]
-  (if (@commands SPACE) ; TODO - This results in far too many bullets - Just count the keydown
+  (if (@key-pressed SPACE) ; TODO - This results in far too many bullets - Just count the keydown
     (conj bullets {:x x :y y})
     bullets
     ))
@@ -148,14 +148,14 @@
 
 (defn event-listener
   "Listener for key board events, and output the result in the provided ref"
-  [output-ref]
+  []
   (let [input-chan (chan)]
-    (reset! output-ref #{})
+    (reset! key-pressed #{})
     (go-loop []
       (let [[msg k] (<! input-chan)]
         (case msg
-            ::down (swap! output-ref conj k)
-            ::up (swap! output-ref disj k))
+            ::down (swap! key-pressed conj k)
+            ::up (swap! key-pressed disj k))
         (recur)))
     (set! (.-onkeydown js/document) #(put! input-chan [::down (.-which %)]))
     (set! (.-onkeyup js/document) #(put! input-chan [::up (.-which %)]))
@@ -170,7 +170,7 @@
        (let [ship-canvas (canvas/init (js/document.getElementById "board") "2d")]
          (canvas/add-entity ship-canvas :ship-entity (main-game-entity))
          (canvas/draw-loop ship-canvas)
-         (event-listener commands)
+         (event-listener)
          ))
      :reagent-render
      (fn render []
