@@ -3,7 +3,8 @@
     [cljs.core.async :refer [put! chan <!]]
     [monet.canvas :as canvas]
     [monet.geometry :as geom]
-    [reagent.core :as reagent :refer [atom]])
+    [reagent.core :as reagent :refer [atom]]
+    [reagi.core :as frp])
   (:require-macros
     [cljs.core.async.macros :refer [go go-loop]]
   ))
@@ -37,27 +38,24 @@
 ;; EVENTS
 ;; ---------------------------------------------------
 
-(def key-pressed (atom #{}))
-(def fire-pressed (atom 0))
+(defonce key-pressed (atom #{}))
+(defonce fire-pressed (atom 0))
 
 (defn event-listener
   "Listener for key board events, and output the result in the provided ref"
   []
-  (let [input-chan (chan)]
-    (reset! key-pressed #{})
-    (go-loop []
-      (let [[msg k] (<! input-chan)]
-        (when (#{LEFT RIGHT UP DOWN SPACE ESCAPE} k)
-          (case msg
-            ::down (swap! key-pressed conj k)
-            ::up (do
-                   (when (= k SPACE)
-                     (swap! fire-pressed inc))
-                   (swap! key-pressed disj k))
-            ))
-        (recur)))
-    (set! (.-onkeydown js/document) #(put! input-chan [::down (.-which %)]))
-    (set! (.-onkeyup js/document) #(put! input-chan [::up (.-which %)]))
+  (let [events (frp/events)
+        keys (frp/reduce
+               (fn [keys [msg k]]
+                 (case msg
+                   ::down (conj keys k)
+                   ::up (disj keys k)))
+               #{} events)
+        fire (frp/filter #(= % [::down SPACE]) events)]
+    (frp/map #(reset! key-pressed %) keys)
+    (frp/map #(swap! fire-pressed inc) fire)
+    (set! (.-onkeydown js/document) #(frp/deliver events [::down (.-which %)]))
+    (set! (.-onkeyup js/document) #(frp/deliver events [::up (.-which %)]))
     ))
 
 
@@ -142,13 +140,6 @@
       (conj bullets {:x x :y y}))
     bullets
     ))
-
-
-;; ---------------------------------------------------
-;; 
-;; ---------------------------------------------------
-
-
 
 
 ;; ---------------------------------------------------

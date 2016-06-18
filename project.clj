@@ -14,6 +14,7 @@
     [environ "1.0.3"]
     [http-kit "2.1.19"]
     [reagent "0.5.1"]
+    [reagi "0.10.1"]
     [ring "1.4.0"]
     [ring/ring-defaults "0.2.0"]
     [ring.middleware.logger "0.5.0"]
