@@ -94,13 +94,21 @@
     (canvas/translate (:x bullet) (:y bullet))
     (canvas/fill-style "red")
     ;(canvas/circle {:x 0 :y 0 :r 15}) ; Does not work
-    (canvas/fill-rect {:x -3 :y (- SHIP-H) :w 6 :h 6})
+    (canvas/fill-rect {:x -3 :y (- (+ SHIP-H 3)) :w 6 :h 6})
     (canvas/restore)
     ))
 
-(defn update-bullet
-  [bullet]
-  bullet)
+(defn keep-bullet
+  [{:keys [x y] :as bullet}]
+  (and
+    (< 0 x) (< x WIDTH)
+    (< 0 y) (< x HEIGHT)
+    ))
+
+(def update-bullets
+  (comp
+    (map #(update % :y - 2))
+    (filter keep-bullet)))
 
 (defn create-bullet
   [bullets {:keys [x y] :as ship}]
@@ -125,7 +133,7 @@
     init-state
     (fn [state]
       (-> state
-        (update :bullets #(mapv update-bullet %))
+        (update :bullets #(into [] update-bullets %))
         (update :bullets create-bullet (:ship state))
         (update :ship update-ship)
         ))
