@@ -35,7 +35,7 @@
 
 
 ;; ---------------------------------------------------
-;; EVENTS
+;; EVENTS HANDLING
 ;; ---------------------------------------------------
 
 (def init-state
@@ -45,8 +45,73 @@
    :bullets []
    })
 
-(defonce key-pressed (atom #{}))
-(defonce fire-pressed (atom false)) ;; Issue when recompiling
+(defonce game-state
+  (atom init-state)) 
+
+;; ---------------------------------------------------
+
+(defn command-move!
+  [[dx dy]]
+  (swap! game-state update-in [:ship]
+    (fn [ship]
+      (-> ship
+        (update :x #(+ % dx))
+        (update :y #(+ % dy))
+        ))
+    ))
+
+(defn box-position!
+  []
+  (swap! game-state update-in [:ship]
+    (fn [ship]
+      (-> ship
+        (update :x #(min % MAX-W))
+        (update :x #(max % MIN-W))
+        (update :y #(min % MIN-H))
+        (update :y #(max % MAX-H))))
+    ))
+
+(defn move-ship!
+  "Update the ship based on the commands pushed"
+  [keys]
+  (prn keys) 
+  (when (keys UP) (command-move! [0 -1]))
+  (when (keys DOWN) (command-move! [0 1]))
+  (when (keys LEFT) (command-move! [-1 0]))
+  (when (keys RIGHT) (command-move! [1 0]))
+  (box-position!)
+  )
+
+;; ---------------------------------------------------
+
+(defn keep-bullet
+  [{:keys [x y] :as bullet}]
+  (and
+    (< 0 x) (< x WIDTH)
+    (< 0 y) (< x HEIGHT)
+    ))
+
+(def move-bullets
+  (comp
+    (map #(update % :y - 2))
+    (filter keep-bullet)))
+
+(defn move-bullets!
+  []
+  (swap! game-state update-in [:bullets]
+    #(into [] move-bullets %)
+    ))
+
+(defn create-bullet!
+  [{:keys [x y] :as ship}]
+  (swap! game-state update-in [:bullets]
+    #(conj % {:x x :y y})
+    ))
+
+
+;; ---------------------------------------------------
+;; EVENT STREAMS 
+;; ---------------------------------------------------
 
 (def event-stream
   (let [events (frp/events)]
@@ -63,14 +128,22 @@
                    ::down (conj keys k)
                    ::up (disj keys k)))
                #{} event-stream)
-        fire (frp/filter #(= % [::down SPACE]) event-stream)]
-    (frp/map #(reset! key-pressed %) keys)
-    (frp/map #(reset! fire-pressed true) fire)
+        fire (frp/filter #(contains? % SPACE) keys)]
+    
+    (frp/map
+      (fn [keys]
+        (move-ship! keys)
+        (move-bullets!))
+      (frp/sample 8 keys))
+    
+    (frp/map
+      #(create-bullet! (:ship @game-state))
+      (frp/sample 500 fire))
     ))
 
 
 ;; ---------------------------------------------------
-;; SHIP
+;; DRAWING
 ;; ---------------------------------------------------
 
 (defn draw-ship
@@ -87,37 +160,10 @@
     (canvas/restore)
     ))
 
-(defn command-move!
-  [{:keys [x y] :as ship} key [dx dy]]
-  (if (@key-pressed key)
-    (-> ship
-      (update :x #(+ % dx))
-      (update :y #(+ % dy)))
-    ship))
-
-(defn box-position
-  [{:keys [x y] :as ship}]
-  (-> ship
-    (update :x #(min % MAX-W))
-    (update :x #(max % MIN-W))
-    (update :y #(min % MIN-H))
-    (update :y #(max % MAX-H))
-    ))
-
 (defn update-ship
-  "Update the ship based on the commands pushed"
-  [ship]
-  (-> ship
-    (command-move! UP [0 -1])
-    (command-move! DOWN [0 1])
-    (command-move! LEFT [-1 0])
-    (command-move! RIGHT [1 0])
-    box-position
-    ))
+  [_]
+  (:ship @game-state))
 
-
-;; ---------------------------------------------------
-;; BULLET
 ;; ---------------------------------------------------
 
 (defn draw-bullet
@@ -130,26 +176,9 @@
     (canvas/restore)
     ))
 
-(defn keep-bullet
-  [{:keys [x y] :as bullet}]
-  (and
-    (< 0 x) (< x WIDTH)
-    (< 0 y) (< x HEIGHT)
-    ))
-
-(def update-bullets
-  (comp
-    (map #(update % :y - 2))
-    (filter keep-bullet)))
-
-(defn create-bullet
-  [bullets {:keys [x y] :as ship}]
-  (if (= @fire-pressed true)
-    (do
-      (reset! fire-pressed false)
-      (conj bullets {:x x :y y}))
-    bullets
-    ))
+(defn update-bullets
+  [_] 
+  (:bullets @game-state))
 
 
 ;; ---------------------------------------------------
@@ -160,12 +189,11 @@
   "Create a display ship entity for the provided ship atom"
   []
   (canvas/entity
-    init-state
+    @game-state
     (fn [state]
       (-> state
-        (update :bullets #(into [] update-bullets %))
-        (update :bullets create-bullet (:ship state))
         (update :ship update-ship)
+        (update :bullets update-bullets)
         ))
     (fn [ctx state]
       (draw-ship ctx (:ship state))
