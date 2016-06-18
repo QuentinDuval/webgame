@@ -11,9 +11,6 @@
 
 (enable-console-print!)
 
-;; https://github.com/rm-hull/monet
-;; https://github.com/Day8/re-frame/wiki/Creating-Reagent-Components
-
 ;; ---------------------------------------------------
 
 (def WIDTH 500)
@@ -127,8 +124,7 @@
                  (case msg
                    ::down (conj keys k)
                    ::up (disj keys k)))
-               #{} event-stream)
-        fire (frp/filter #(contains? % SPACE) keys)]
+               #{} event-stream)]
     
     (frp/map
       (fn [keys]
@@ -138,10 +134,6 @@
           (create-bullet! (:ship @game-state))
           ))
       (frp/sample 8 keys))
-    
-    #_(frp/map
-       #(create-bullet! (:ship @game-state))
-       fire)
     ))
 
 
