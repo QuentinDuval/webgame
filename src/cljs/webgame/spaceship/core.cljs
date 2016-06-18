@@ -133,17 +133,20 @@
     (frp/map
       (fn [keys]
         (move-ship! keys)
-        (move-bullets!))
+        (move-bullets!)
+        (when (keys SPACE)
+          (create-bullet! (:ship @game-state))
+          ))
       (frp/sample 8 keys))
     
-    (frp/map
-      #(create-bullet! (:ship @game-state))
-      (frp/sample 500 fire))
+    #_(frp/map
+       #(create-bullet! (:ship @game-state))
+       fire)
     ))
 
 
 ;; ---------------------------------------------------
-;; DRAWING
+;; DRAWING LOOP
 ;; ---------------------------------------------------
 
 (defn draw-ship
@@ -160,12 +163,6 @@
     (canvas/restore)
     ))
 
-(defn update-ship
-  [_]
-  (:ship @game-state))
-
-;; ---------------------------------------------------
-
 (defn draw-bullet
   [ctx bullet]
   (-> ctx
@@ -176,25 +173,12 @@
     (canvas/restore)
     ))
 
-(defn update-bullets
-  [_] 
-  (:bullets @game-state))
-
-
-;; ---------------------------------------------------
-;; GAME LOOP
-;; ---------------------------------------------------
-
 (defn main-game-entity
   "Create a display ship entity for the provided ship atom"
   []
   (canvas/entity
     @game-state
-    (fn [state]
-      (-> state
-        (update :ship update-ship)
-        (update :bullets update-bullets)
-        ))
+    (fn [_] @game-state)
     (fn [ctx state]
       (draw-ship ctx (:ship state))
       (doseq [b (:bullets state)]
