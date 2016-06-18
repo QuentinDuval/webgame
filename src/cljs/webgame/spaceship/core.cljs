@@ -15,13 +15,27 @@
 
 ;; ---------------------------------------------------
 
-(def init-ship
-  {:x 50
-   :y 50
-   :angle 0})
+(def WIDTH 500)
+(def HEIGHT 500)
 
-(def ship-state
-  (atom init-ship))
+(def init-ship
+  {:x (/ WIDTH 2)
+   :y (- HEIGHT 50)
+  })
+
+(def init-state
+  {:ship init-ship
+   :bullets []
+   })
+
+(def DOWN 40)
+(def RIGHT 39)
+(def UP 38)
+(def LEFT 37)
+(def SPACE 32)
+(def ESCAPE 27)
+
+(def commands (atom #{}))
 
 ;; ---------------------------------------------------
 
@@ -33,11 +47,29 @@
     (canvas/translate (:x ship) (:y ship))
     (canvas/rotate (:angle ship))
     (canvas/begin-path)
-    (canvas/move-to 30 0)
-    (canvas/line-to 0 -12)
-    (canvas/line-to 0 12)
+    (canvas/move-to -12 0)
+    (canvas/line-to 12 0)
+    (canvas/line-to 0 -22)
     (canvas/fill)
     (canvas/restore)
+    ))
+
+(defn command-move!
+  [{:keys [x y] :as entity} key [dx dy]]
+  (if (@commands key)
+    (-> entity
+      (update :x #(+ % dx))
+      (update :y #(+ % dy)))
+    entity))
+
+(defn update-ship
+  "Update the ship based on the commands pushed"
+  [ship]
+  (-> ship
+    (command-move! UP [0 -1])
+    (command-move! DOWN [0 1])
+    (command-move! LEFT [-1 0])
+    (command-move! RIGHT [1 0])
     ))
 
 ;; ---------------------------------------------------
@@ -46,26 +78,24 @@
   "Create a display ship entity for the provided ship atom"
   [ship]
   (canvas/entity
-    @ship
-    (fn update [value] @ship)
+    ship
+    update-ship
     draw-ship
     ))
 
 (defn event-loop
-  "TEMPORARY - assemble the keys events to know which keys are pressed"
   []
   (let [input-chan (chan)]
     (go-loop [keys #{}]
-     (let [[msg key] (<! input-chan)
-           new-keys (case msg
-                      ::down (conj keys key)
-                      ::up (disj keys key))]
-       (prn new-keys)
-       (recur new-keys))
-     )
+      (reset! commands keys)
+      (let [[msg k] (<! input-chan)
+            new-keys (case msg
+                       ::down (conj keys k)
+                       ::up (disj keys k))]
+        (recur new-keys)))
     input-chan))
 
-(defn space-ship
+(defn space-ship-game
   "Render the space ship game"
   []
   (reagent/create-class
@@ -73,7 +103,7 @@
      (fn did-mount []
        (prn "initialize")
        (let [ship-canvas (canvas/init (js/document.getElementById "board") "2d")]
-         (canvas/add-entity ship-canvas :ship-entity (make-ship-entity ship-state))
+         (canvas/add-entity ship-canvas :ship-entity (make-ship-entity init-ship))
          (canvas/draw-loop ship-canvas)
          
          (let [send-chan (event-loop)]
@@ -85,13 +115,10 @@
      (fn render []
        [:div
         [:h1 "Space ship"]
-        [:button
-         {:on-click (fn [] (swap! ship-state update-in [:x] dec))}
-         "Left"]
-        [:canvas#board {:width 500 :height 500}]
+        [:canvas#board {:width WIDTH :height HEIGHT}]
        ])
      }))
 
 
-(reagent/render [space-ship]
+(reagent/render [space-ship-game]
   (js/document.getElementById "app"))
