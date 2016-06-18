@@ -106,14 +106,15 @@
   (let [input-chan (chan)]
     (go-loop [keys #{}]
       (reset! output-ref keys)
-      (let [[msg k] (<! input-chan)
-            new-keys (case msg
-                       ::down (conj keys k)
-                       ::up (disj keys k))]
-        (recur new-keys)))
-    
-    
-    input-chan))
+      (let [[msg k] (<! input-chan)]
+        (recur
+          (case msg
+            ::down (conj keys k)
+            ::up (disj keys k))
+          )))
+    (set! (.-onkeydown js/document) #(put! input-chan [::down (.-which %)]))
+    (set! (.-onkeyup js/document) #(put! input-chan [::up (.-which %)]))
+    ))
 
 (defn space-ship-game
   "Render the space ship game"
@@ -124,9 +125,7 @@
        (let [ship-canvas (canvas/init (js/document.getElementById "board") "2d")]
          (canvas/add-entity ship-canvas :ship-entity (main-game-entity))
          (canvas/draw-loop ship-canvas)
-         (let [send-chan (event-listener commands)]
-           (set! (.-onkeydown js/document) #(put! send-chan [::down (.-which %)]))
-           (set! (.-onkeyup js/document) #(put! send-chan [::up (.-which %)])))
+         (event-listener commands)
          ))
      :reagent-render
      (fn render []
