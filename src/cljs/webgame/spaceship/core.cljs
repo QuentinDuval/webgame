@@ -38,24 +38,34 @@
 ;; EVENTS
 ;; ---------------------------------------------------
 
+(def init-state
+  {:ship
+   {:x (/ WIDTH 2)
+    :y (/ (+ MAX-H MIN-H) 2)}
+   :bullets []
+   })
+
 (defonce key-pressed (atom #{}))
-(defonce fire-pressed (atom 0))
+(defonce fire-pressed (atom false)) ;; Issue when recompiling
+
+(def event-stream
+  (let [events (frp/events)]
+    (set! (.-onkeydown js/document) #(frp/deliver events [::down (.-which %)]))
+    (set! (.-onkeyup js/document) #(frp/deliver events [::up (.-which %)]))
+    events))
 
 (defn event-listener
   "Listener for key board events, and output the result in the provided ref"
   []
-  (let [events (frp/events)
-        keys (frp/reduce
+  (let [keys (frp/reduce
                (fn [keys [msg k]]
                  (case msg
                    ::down (conj keys k)
                    ::up (disj keys k)))
-               #{} events)
-        fire (frp/filter #(= % [::down SPACE]) events)]
+               #{} event-stream)
+        fire (frp/filter #(= % [::down SPACE]) event-stream)]
     (frp/map #(reset! key-pressed %) keys)
-    (frp/map #(swap! fire-pressed inc) fire)
-    (set! (.-onkeydown js/document) #(frp/deliver events [::down (.-which %)]))
-    (set! (.-onkeyup js/document) #(frp/deliver events [::up (.-which %)]))
+    (frp/map #(reset! fire-pressed true) fire)
     ))
 
 
@@ -134,9 +144,9 @@
 
 (defn create-bullet
   [bullets {:keys [x y] :as ship}]
-  (if (pos? @fire-pressed)
+  (if (= @fire-pressed true)
     (do
-      (swap! fire-pressed dec)
+      (reset! fire-pressed false)
       (conj bullets {:x x :y y}))
     bullets
     ))
@@ -145,14 +155,6 @@
 ;; ---------------------------------------------------
 ;; GAME LOOP
 ;; ---------------------------------------------------
-
-(def init-state
-  {:ship
-   {:x (/ WIDTH 2)
-    :y (/ (+ MAX-H MIN-H) 2)}
-   :bullets []
-   :asteroids []
-   })
 
 (defn main-game-entity
   "Create a display ship entity for the provided ship atom"
