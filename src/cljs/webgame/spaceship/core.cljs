@@ -75,9 +75,9 @@
   [keys]
   (swap! game-state update-in [:ship]
    (fn [ship]
-     (let [to-apply (map second (filter #(keys (first %)) commands))
-           next-ship (reduce #(%2 %1) ship to-apply)]
-       (box-position next-ship)))
+     (let [to-apply (map second (filter #(keys (first %)) commands))]
+       (box-position (reduce #(%2 %1) ship to-apply))
+       ))
    ))
 
 ;; ---------------------------------------------------
@@ -123,18 +123,14 @@
                    ::down (conj keys k)
                    ::up (disj keys k)))
                #{} event-stream)
-        fire (frp/filter #(= % [::down SPACE]) event-stream)
-        ]
+        fire (frp/filter #(= % [::up SPACE]) event-stream)]
+    
     (frp/map
       (fn [keys]
         (move-ship! keys)
         (move-bullets!))
       (frp/sample 8 keys))
-    
-    (frp/map
-      (fn [_]
-        (create-bullet! (:ship @game-state)))
-      (frp/throttle 100 fire))
+    (frp/map #(create-bullet! (:ship @game-state)) fire)
     ))
 
 
