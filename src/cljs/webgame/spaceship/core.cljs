@@ -20,36 +20,35 @@
    :y 50
    :angle 0})
 
-(def ship
+(def ship-state
   (atom init-ship))
+
+;; ---------------------------------------------------
+
+(defn draw-ship
+  "Draw the ship"
+  [ctx ship]
+  (-> ctx
+    (canvas/save)
+    (canvas/translate (:x ship) (:y ship))
+    (canvas/rotate (:angle ship))
+    (canvas/begin-path)
+    (canvas/move-to 30 0)
+    (canvas/line-to 0 -12)
+    (canvas/line-to 0 12)
+    (canvas/fill)
+    (canvas/restore)
+    ))
+
+;; ---------------------------------------------------
 
 (defn make-ship-entity
   "Create a display ship entity for the provided ship atom"
   [ship]
   (canvas/entity
-    {:x (:x @ship)
-     :y (:y @ship)
-     :angle (:angle @ship)}
-    (fn update
-      [value]
-      (-> value
-        (assoc :x (:x @ship))
-        (assoc :y (:y @ship))
-        (assoc :angle (:angle @ship))
-        ))
-    (fn draw
-      [ctx val]
-      (-> ctx
-        (canvas/save)
-        (canvas/translate (:x val) (:y val))
-        (canvas/rotate (:angle val))
-        (canvas/begin-path)
-        (canvas/move-to 30 0)
-        (canvas/line-to 0 -12)
-        (canvas/line-to 0 12)
-        (canvas/fill)
-        (canvas/restore)
-        ))
+    @ship
+    (fn update [value] @ship)
+    draw-ship
     ))
 
 (defn event-loop
@@ -74,7 +73,7 @@
      (fn did-mount []
        (prn "initialize")
        (let [ship-canvas (canvas/init (js/document.getElementById "board") "2d")]
-         (canvas/add-entity ship-canvas :ship-entity (make-ship-entity ship))
+         (canvas/add-entity ship-canvas :ship-entity (make-ship-entity ship-state))
          (canvas/draw-loop ship-canvas)
          
          (let [send-chan (event-loop)]
@@ -87,7 +86,7 @@
        [:div
         [:h1 "Space ship"]
         [:button
-         {:on-click (fn [] (swap! ship update-in [:x] dec))}
+         {:on-click (fn [] (swap! ship-state update-in [:x] dec))}
          "Left"]
         [:canvas#board {:width 500 :height 500}]
        ])
