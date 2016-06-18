@@ -71,7 +71,6 @@
 (defn move-ship!
   "Update the ship based on the commands pushed"
   [keys]
-  (prn keys) 
   (when (keys UP) (command-move! [0 -1]))
   (when (keys DOWN) (command-move! [0 1]))
   (when (keys LEFT) (command-move! [-1 0]))
@@ -110,30 +109,31 @@
 ;; EVENT STREAMS 
 ;; ---------------------------------------------------
 
-(def event-stream
+(defonce event-stream
   (let [events (frp/events)]
     (set! (.-onkeydown js/document) #(frp/deliver events [::down (.-which %)]))
     (set! (.-onkeyup js/document) #(frp/deliver events [::up (.-which %)]))
     events))
 
-(defn event-listener
-  "Listener for key board events, and output the result in the provided ref"
-  []
+(defonce event-listener
   (let [keys (frp/reduce
                (fn [keys [msg k]]
                  (case msg
                    ::down (conj keys k)
                    ::up (disj keys k)))
-               #{} event-stream)]
-    
+               #{} event-stream)
+        fire (frp/filter #(= % [::down SPACE]) event-stream)
+        ]
     (frp/map
       (fn [keys]
         (move-ship! keys)
-        (move-bullets!)
-        (when (keys SPACE)
-          (create-bullet! (:ship @game-state))
-          ))
+        (move-bullets!))
       (frp/sample 8 keys))
+    
+    (frp/map
+      (fn [_]
+        (create-bullet! (:ship @game-state)))
+      (frp/throttle 100 fire))
     ))
 
 
@@ -189,7 +189,6 @@
        (let [ship-canvas (canvas/init (js/document.getElementById "board") "2d")]
          (canvas/add-entity ship-canvas :ship-entity (main-game-entity))
          (canvas/draw-loop ship-canvas)
-         (event-listener)
          ))
      :reagent-render
      (fn render []
