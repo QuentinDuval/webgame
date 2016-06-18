@@ -153,6 +153,7 @@
     (reset! key-pressed #{})
     (go-loop []
       (let [[msg k] (<! input-chan)]
+        (when (#{LEFT RIGHT UP DOWN SPACE ESCAPE} k)
           (case msg
             ::down (swap! key-pressed conj k)
             ::up (swap! key-pressed disj k)))
