@@ -154,10 +154,8 @@
             ::pause (switch-pause!))
           (case evt
             ::pause (switch-pause!)
-            (prn "ignored"))
-          )
-        (recur)
-        ))
+            (prn "ignored")))
+        (recur)))
     input-chan
     ))
 
@@ -165,7 +163,10 @@
   (let [events (frp/events)]
     (set! (.-onkeydown js/document) #(frp/deliver events [::down (.-which %)]))
     (set! (.-onkeyup js/document) #(frp/deliver events [::up (.-which %)]))
-    events))
+    (frp/filter
+      #(#{LEFT RIGHT DOWN UP SPACE ESCAPE} (second %))
+      events)
+    ))
 
 (defonce event-listener
   (let [keys (frp/reduce
@@ -193,7 +194,6 @@
     (frp/subscribe
       (frp/constantly [::pop-asteroid] (frp/sample 1000 keys))
       game-loop)
-    
     ))
 
 
