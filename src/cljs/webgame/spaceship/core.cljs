@@ -142,9 +142,12 @@
   []
   (swap! game-state
     (fn [state]
-      (-> state
-        (collisions-with :asteroids (:bullets state))
-        (collisions-with :bullets (:asteroids state))
+      (let [next-state
+            (-> state
+              (collisions-with :asteroids (:bullets state))
+              (collisions-with :bullets (:asteroids state)))
+            points (- (count (:asteroids state)) (count (:asteroids next-state)))]
+        (update-in next-state [:score] + points)
         ))
     ))
 
@@ -203,7 +206,7 @@
       game-loop)
     
     (frp/subscribe
-      (frp/constantly [::pop-asteroid] (frp/sample 1000 moves))
+      (frp/constantly [::pop-asteroid] (frp/sample 500 moves))
       game-loop)
     ))
 
