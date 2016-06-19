@@ -110,6 +110,21 @@
 ;; EVENT STREAMS 
 ;; ---------------------------------------------------
 
+(defonce game-loop
+  (let [input-chan (chan)]
+    (go-loop []
+      (let [[evt params] (<! input-chan)]
+        (case evt
+          ::init (prn "init")
+          ::move (do (move-ship! params) (move-bullets!))
+          ::fire (create-bullet! (:ship @game-state))
+          ::asteroid-tick (prn "pop-asteroid")
+          )
+        (recur)
+        ))
+    input-chan
+    ))
+
 (defonce event-stream
   (let [events (frp/events)]
     (set! (.-onkeydown js/document) #(frp/deliver events [::down (.-which %)]))
@@ -125,12 +140,13 @@
                #{} event-stream)
         fire (frp/filter #(= % [::up SPACE]) event-stream)]
     
-    (frp/map
-      (fn [keys]
-        (move-ship! keys)
-        (move-bullets!))
-      (frp/sample 8 keys))
-    (frp/map #(create-bullet! (:ship @game-state)) fire)
+    (frp/subscribe
+      (frp/map (fn [keys] [::move keys]) (frp/sample 8 keys))
+      game-loop)
+    
+    (frp/subscribe
+      (frp/map (fn [_] [::fire]) fire)
+      game-loop)
     ))
 
 
