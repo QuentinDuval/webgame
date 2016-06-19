@@ -50,20 +50,27 @@
 ;; ---------------------------------------------------
 
 (defn command-move
-  [ship [dx dy]]
-  (-> ship
+  [entity [dx dy]]
+  (-> entity
     (update :x #(+ % dx))
     (update :y #(+ % dy))
     ))
 
-(defn box-position
+(defn force-in-board
   [ship]
   (-> ship
-    (update :x #(min % MAX-W))
-    (update :x #(max % MIN-W))
-    (update :y #(min % MIN-H))
-    (update :y #(max % MAX-H))
+    (update :x #(max (min % MAX-W) MIN-W))
+    (update :y #(max (min % MIN-H) MAX-H))
     ))
+
+(defn inside-board?
+  [{:keys [x y] :as bullet}]
+  (and
+    (< 0 x) (< x WIDTH)
+    (< 0 y) (< x HEIGHT)
+    ))
+
+;; ---------------------------------------------------
 
 (def commands
   [[UP #(command-move % [0 -1])]
@@ -78,48 +85,32 @@
   (swap! game-state update-in [:ship]
    (fn [ship]
      (let [to-apply (map second (filter #(keys (first %)) commands))]
-       (box-position (reduce #(%2 %1) ship to-apply))
+       (force-in-board (reduce #(%2 %1) ship to-apply))
        ))
    ))
 
 ;; ---------------------------------------------------
 
-(defn keep-bullet
-  [{:keys [x y] :as bullet}]
-  (and
-    (< 0 x) (< x WIDTH)
-    (< 0 y) (< x HEIGHT)
-    ))
-
-(def move-bullets-xf
+(defn move-entity
+  [dy]
   (comp
-    (map #(update % :y - 2))
-    (filter keep-bullet)))
+    (map #(command-move % [0 dy]))
+    (filter inside-board?)))
 
-(defn move-bullets!
+(defn move-entities!
   []
-  (swap! game-state update-in [:bullets]
-    #(into [] move-bullets-xf %)
+  (swap! game-state
+    (fn [state]
+      (-> state
+        (update-in [:bullets] #(into [] (move-entity -2) %))
+        (update-in [:asteroids] #(into [] (move-entity 2) %))
+        ))
     ))
 
 (defn create-bullet!
   [{:keys [x y] :as ship}]
   (swap! game-state update-in [:bullets]
     #(conj % {:x x :y y})
-    ))
-
-
-;; ---------------------------------------------------
-
-(def move-asteroid-xf ;; TODO -FACTORIZATION with bullets
-  (comp
-    (map #(update % :y + 2))
-    (filter keep-bullet)))
-
-(defn move-asteroids!
-  []
-  (swap! game-state update-in [:asteroids]
-    #(into [] move-asteroid-xf %)
     ))
 
 (defn create-asteroid!
@@ -147,8 +138,8 @@
       (let [[evt params] (<! input-chan)]
         (if (= (:paused @game-state) false)
           (case evt
-            ::init (prn "init")
-            ::move (do (move-ship! params) (move-bullets!) (move-asteroids!))
+            ::init (reset! game-state init-state)
+            ::move (do (move-ship! params) (move-entities!))
             ::fire (create-bullet! (:ship @game-state))
             ::pop-asteroid (create-asteroid!)
             ::pause (switch-pause!))
