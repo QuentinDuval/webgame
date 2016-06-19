@@ -40,6 +40,7 @@
    {:x (/ WIDTH 2)
     :y (/ (+ MAX-H MIN-H) 2)}
    :bullets []
+   :asteroids [] 
    })
 
 (defonce game-state
@@ -94,7 +95,8 @@
     (map #(update % :y - 2))
     (filter keep-bullet)))
 
-(defn move-bullets! []
+(defn move-bullets!
+  []
   (swap! game-state update-in [:bullets]
     #(into [] move-bullets-xf %)
     ))
@@ -107,6 +109,25 @@
 
 
 ;; ---------------------------------------------------
+
+(def move-asteroid-xf ;; TODO -FACTORIZATION with bullets
+  (comp
+    (map #(update % :y + 2))
+    (filter keep-bullet)))
+
+(defn move-asteroids!
+  []
+  (swap! game-state update-in [:asteroids]
+    #(into [] move-asteroid-xf %)
+    ))
+
+(defn create-asteroid!
+  []
+  (swap! game-state update-in [:asteroids]
+    #(conj % {:x (rand-int WIDTH) :y 0})
+    ))
+
+;; ---------------------------------------------------
 ;; EVENT STREAMS 
 ;; ---------------------------------------------------
 
@@ -116,9 +137,9 @@
       (let [[evt params] (<! input-chan)]
         (case evt
           ::init (prn "init")
-          ::move (do (move-ship! params) (move-bullets!))
+          ::move (do (move-ship! params) (move-bullets!) (move-asteroids!))
           ::fire (create-bullet! (:ship @game-state))
-          ::asteroid (prn "pop-asteroid"))
+          ::pop-asteroid (create-asteroid!))
         (recur)
         ))
     input-chan
@@ -148,7 +169,7 @@
       game-loop)
     
     (frp/subscribe
-      (frp/constantly [::asteroid] (frp/sample 1000 keys))
+      (frp/constantly [::pop-asteroid] (frp/sample 1000 keys))
       game-loop)
     
     ))
@@ -182,6 +203,16 @@
     (canvas/restore)
     ))
 
+(defn draw-asteroid
+  [ctx asteroid]
+  (-> ctx
+    (canvas/save)
+    (canvas/translate (:x asteroid) (:y asteroid))
+    (canvas/fill-style "green")
+    (canvas/fill-rect {:x -10 :y -10 :w 20 :h 20})
+    (canvas/restore)
+    )) 
+
 (defn main-game-entity
   "Create a display ship entity for the provided ship atom"
   []
@@ -192,6 +223,8 @@
       (draw-ship ctx (:ship state))
       (doseq [b (:bullets state)]
         (draw-bullet ctx b))
+      (doseq [a (:asteroids state)]
+        (draw-asteroid ctx a)) 
       )
     ))
 
