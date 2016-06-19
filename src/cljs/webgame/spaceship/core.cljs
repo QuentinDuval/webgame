@@ -65,11 +65,10 @@
     ))
 
 (defn inside-board?
-  [{:keys [x y] :as bullet}]
-  (and
-    (< 0 x) (< x WIDTH)
-    (< 0 y) (< x HEIGHT)
-    ))
+  [entity]
+  (geom/contained?
+    {:x 0 :y 0 :w WIDTH :h HEIGHT}
+    entity))
 
 ;; ---------------------------------------------------
 
@@ -126,6 +125,26 @@
   []
   (swap! game-state update-in [:paused] not))
 
+(defn collide?
+  [lhs rhs]
+  (> 10 (:dist (geom/distance lhs rhs))))
+
+(defn asteroid-collisions
+  [state]
+  (update-in state [:asteroids]
+    (fn [asteroids]
+      (filter
+        (fn [a]
+          (not-any? #(collide? a %) (:bullets state)))
+        asteroids))
+    ))
+
+(defn handle-collisions!
+  []
+  (swap! game-state
+    (fn [state]
+      (-> state asteroid-collisions))
+    ))
 
 ;; ---------------------------------------------------
 ;; EVENT STREAMS 
@@ -140,7 +159,7 @@
         (if (= (:paused @game-state) false)
           (case evt
             ::init (reset! game-state init-state)
-            ::move (do (move-ship! params) (move-entities!))
+            ::move (do (move-ship! params) (move-entities!) (handle-collisions!))
             ::fire (create-bullet! (:ship @game-state))
             ::pop-asteroid (create-asteroid!)
             ::pause (switch-pause!))
