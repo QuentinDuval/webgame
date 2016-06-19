@@ -150,40 +150,38 @@
     input-chan
     ))
 
-(defonce event-stream
+(defonce key-stream
   (let [events (frp/events)]
     (set! (.-onkeydown js/document) #(frp/deliver events [::down (.-which %)]))
     (set! (.-onkeyup js/document) #(frp/deliver events [::up (.-which %)]))
-    (frp/filter
-      #(#{LEFT RIGHT DOWN UP SPACE ESCAPE} (second %))
-      events)
-    ))
+    events))
+
+(defn filter-key
+  [key stream]
+  (frp/filter #(= % [::up key]) stream))
 
 (defonce event-listener
-  (let [keys (frp/reduce
-               (fn [keys [msg k]]
-                 (case msg
-                   ::down (conj keys k)
-                   ::up (disj keys k)))
-               #{} event-stream)
-        fire (frp/filter #(= % [::up SPACE]) event-stream)
-        pause (frp/filter #(= % [::up ESCAPE]) event-stream)
-        ]
+  (let [moves (frp/reduce
+                (fn [keys [msg k]]
+                  (case msg
+                    ::down (conj keys k)
+                    ::up (disj keys k)))
+                #{} key-stream)]
     
     (frp/subscribe
-      (frp/map (fn [keys] [::move keys]) (frp/sample 8 keys))
+      (frp/map (fn [keys] [::move keys]) (frp/sample 8 moves))
       game-loop)
     
     (frp/subscribe
-      (frp/constantly [::fire] fire)
+      (frp/constantly [::fire] (filter-key SPACE key-stream))
       game-loop)
     
     (frp/subscribe
-      (frp/constantly [::pause] pause)
+      (frp/constantly [::pause] (filter-key ESCAPE key-stream))
       game-loop)
     
     (frp/subscribe
-      (frp/constantly [::pop-asteroid] (frp/sample 1000 keys))
+      (frp/constantly [::pop-asteroid] (frp/sample 1000 moves))
       game-loop)
     ))
 
@@ -250,7 +248,7 @@
     {:component-did-mount
      (fn did-mount []
        (let [ship-canvas (canvas/init (js/document.getElementById "board") "2d")]
-         (canvas/add-entity ship-canvas :ship-entity (main-game-entity))
+         (canvas/add-entity ship-canvas :game-entity (main-game-entity))
          (canvas/draw-loop ship-canvas)
          ))
      :reagent-render
