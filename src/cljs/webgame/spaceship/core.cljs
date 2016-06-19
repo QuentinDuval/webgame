@@ -139,6 +139,8 @@
 ;; EVENT STREAMS 
 ;; ---------------------------------------------------
 
+;; TODO - When managing collision, take into account the fact that the asteroids are sorted by Y
+
 (defonce game-loop
   (let [input-chan (chan)]
     (go-loop []
