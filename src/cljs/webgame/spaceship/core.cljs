@@ -125,17 +125,16 @@
   []
   (swap! game-state update-in [:paused] not))
 
-(defn collide?
+(defn collide? ;; TODO - bad approximation here
   [lhs rhs]
   (> 10 (:dist (geom/distance lhs rhs))))
 
-(defn asteroid-collisions
-  [state]
-  (update-in state [:asteroids]
+(defn collisions-with
+  [state obj-type obstacles]
+  (update-in state [obj-type]
     (fn [asteroids]
       (filter
-        (fn [a]
-          (not-any? #(collide? a %) (:bullets state)))
+        (fn [a] (not-any? #(collide? a %) obstacles))
         asteroids))
     ))
 
@@ -143,7 +142,10 @@
   []
   (swap! game-state
     (fn [state]
-      (-> state asteroid-collisions))
+      (-> state
+        (collisions-with :asteroids (:bullets state))
+        (collisions-with :bullets (:asteroids state))
+        ))
     ))
 
 ;; ---------------------------------------------------
