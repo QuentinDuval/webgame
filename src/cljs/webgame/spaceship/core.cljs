@@ -118,8 +118,7 @@
           ::init (prn "init")
           ::move (do (move-ship! params) (move-bullets!))
           ::fire (create-bullet! (:ship @game-state))
-          ::asteroid-tick (prn "pop-asteroid")
-          )
+          ::asteroid (prn "pop-asteroid"))
         (recur)
         ))
     input-chan
@@ -145,8 +144,13 @@
       game-loop)
     
     (frp/subscribe
-      (frp/map (fn [_] [::fire]) fire)
+      (frp/constantly [::fire] fire)
       game-loop)
+    
+    (frp/subscribe
+      (frp/constantly [::asteroid] (frp/sample 1000 keys))
+      game-loop)
+    
     ))
 
 
