@@ -42,6 +42,7 @@
    :bullets []
    :asteroids []
    :paused false
+   :score 0
    })
 
 (defonce game-state
@@ -224,6 +225,13 @@
     (canvas/restore)
     )) 
 
+(defn draw-score
+  [ctx score]
+  (-> ctx
+    (canvas/font-style "30px Arial")
+    (canvas/text {:text (str score) :x (- WIDTH 80) :y 40})
+    ))
+
 (defn main-game-entity
   "Create a display ship entity for the provided ship atom"
   []
@@ -232,6 +240,7 @@
     (fn [_] @game-state)
     (fn [ctx state]
       (draw-ship ctx (:ship state))
+      (draw-score ctx (:score state)) 
       (doseq [b (:bullets state)]
         (draw-bullet ctx b))
       (doseq [a (:asteroids state)]
