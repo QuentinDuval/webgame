@@ -40,7 +40,8 @@
    {:x (/ WIDTH 2)
     :y (/ (+ MAX-H MIN-H) 2)}
    :bullets []
-   :asteroids [] 
+   :asteroids []
+   :paused false
    })
 
 (defonce game-state
@@ -128,6 +129,13 @@
     ))
 
 ;; ---------------------------------------------------
+
+(defn switch-pause!
+  []
+  (swap! game-state update-in [:paused] not))
+
+
+;; ---------------------------------------------------
 ;; EVENT STREAMS 
 ;; ---------------------------------------------------
 
@@ -135,11 +143,17 @@
   (let [input-chan (chan)]
     (go-loop []
       (let [[evt params] (<! input-chan)]
-        (case evt
-          ::init (prn "init")
-          ::move (do (move-ship! params) (move-bullets!) (move-asteroids!))
-          ::fire (create-bullet! (:ship @game-state))
-          ::pop-asteroid (create-asteroid!))
+        (if (= (:paused @game-state) false)
+          (case evt
+            ::init (prn "init")
+            ::move (do (move-ship! params) (move-bullets!) (move-asteroids!))
+            ::fire (create-bullet! (:ship @game-state))
+            ::pop-asteroid (create-asteroid!)
+            ::pause (switch-pause!))
+          (case evt
+            ::pause (switch-pause!)
+            (prn "ignored"))
+          )
         (recur)
         ))
     input-chan
@@ -158,7 +172,9 @@
                    ::down (conj keys k)
                    ::up (disj keys k)))
                #{} event-stream)
-        fire (frp/filter #(= % [::up SPACE]) event-stream)]
+        fire (frp/filter #(= % [::up SPACE]) event-stream)
+        pause (frp/filter #(= % [::up ESCAPE]) event-stream)
+        ]
     
     (frp/subscribe
       (frp/map (fn [keys] [::move keys]) (frp/sample 8 keys))
@@ -166,6 +182,10 @@
     
     (frp/subscribe
       (frp/constantly [::fire] fire)
+      game-loop)
+    
+    (frp/subscribe
+      (frp/constantly [::pause] pause)
       game-loop)
     
     (frp/subscribe
