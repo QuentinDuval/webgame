@@ -170,19 +170,32 @@
     input-chan
     ))
 
-(defonce key-stream
-  (let [events (frp/events)]
-    (set! (.-onkeydown js/document) #(frp/deliver events [::down (.-which %)]))
-    (set! (.-onkeyup js/document) #(frp/deliver events [::up (.-which %)]))
-    events))
+(defonce key-chan
+  (let [events (chan)]
+    (set! (.-onkeydown js/document) #(put! events [::down (.-which %)]))
+    (set! (.-onkeyup js/document) #(put! events [::up (.-which %)]))
+    (async/mult events)))
 
 (defn keypress->action
   [k]
   (get {[::up SPACE] [::fire]
         [::up ESCAPE] [::pause]} k))
 
+(defonce move-chan
+  (let [pred #(-> % second #{DOWN RIGHT UP LEFT})]
+    (async/tap key-chan (chan 1 (filter pred)))))
+
+(defonce action-chan
+  (async/tap key-chan (chan 1 (keep keypress->action))))
+
+(go-loop []
+  (<! (async/timeout 500))
+  (>! game-loop [::pop-asteroid])
+  (recur))
+
 (defonce event-listener
-  (let [moves (frp/reduce
+  (let [key-stream (frp/events)
+        moves (frp/reduce
                 (fn [keys [msg k]]
                   (case msg
                     ::down (conj keys k)
@@ -193,14 +206,8 @@
       (frp/map (fn [keys] [::move keys]) (frp/sample 8 moves))
       game-loop)
     
-    (async/pipe
-      (frp/subscribe key-stream (chan 1 (keep keypress->action)))
-      game-loop)
-    
-    (go-loop []
-      (<! (async/timeout 500))
-      (>! game-loop [::pop-asteroid])
-      (recur))
+    (async/pipe move-chan (frp/port key-stream))
+    (async/pipe action-chan game-loop)
     ))
 
 
