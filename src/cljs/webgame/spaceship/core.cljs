@@ -137,12 +137,14 @@
 ;; ---------------------------------------------------
 
 (defn create-bullet!
+  "Add a new bullet to the game, at the ship's position" 
   [{:keys [x y] :as ship}]
   (swap! game-state update-in [:bullets]
     #(conj % {:x x :y y})
     ))
 
 (defn create-asteroid!
+  "Create a new asteroid into the game" ;; TODO - Make them appear with strange directions 
   []
   (swap! game-state update-in [:asteroids]
     #(conj % {:x (rand-int WIDTH) :y 0})
@@ -167,8 +169,7 @@
               ::pop-asteroid (create-asteroid!))
             ))
         (recur)))
-    input-chan
-    ))
+    input-chan))
 
 (def move-filter
   (filter #(-> % second #{DOWN RIGHT UP LEFT})))
@@ -191,22 +192,21 @@
   (>! game-loop [::pop-asteroid])
   (recur))
 
-(defonce event-listener
-  (let [key-stream (frp/events)
-        moves (frp/reduce
-                (fn [keys [msg k]]
-                  (case msg
-                    ::down (conj keys k)
-                    ::up (disj keys k)))
-                #{} key-stream)]  
-    
-    (frp/subscribe
-      (frp/map (fn [keys] [::move keys]) (frp/sample 8 moves))
-      game-loop)
-    
-    (async/pipe (:moves key-chan) (frp/port key-stream))
-    (async/pipe (:actions key-chan) game-loop)
-    ))
+(defonce moves-stream
+  (let [stream (frp/events)]
+    (async/pipe (:moves key-chan) (frp/port stream))
+    (frp/reduce
+      (fn [keys [msg k]]
+        (case msg
+          ::down (conj keys k)
+          ::up (disj keys k)))
+      #{} stream)))
+
+(frp/subscribe
+  (frp/map (fn [keys] [::move keys]) (frp/sample 8 moves-stream))
+  game-loop)
+
+(async/pipe (:actions key-chan) game-loop)
 
 
 ;; ---------------------------------------------------
