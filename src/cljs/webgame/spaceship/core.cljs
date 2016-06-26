@@ -170,23 +170,23 @@
     input-chan
     ))
 
-(defonce key-chan
-  (let [events (chan)]
-    (set! (.-onkeydown js/document) #(put! events [::down (.-which %)]))
-    (set! (.-onkeyup js/document) #(put! events [::up (.-which %)]))
-    (async/mult events)))
+(defn move-filter
+  [e]
+  (-> e second #{DOWN RIGHT UP LEFT}))
 
 (defn keypress->action
   [k]
   (get {[::up SPACE] [::fire]
         [::up ESCAPE] [::pause]} k))
 
-(defonce move-chan
-  (let [pred #(-> % second #{DOWN RIGHT UP LEFT})]
-    (async/tap key-chan (chan 1 (filter pred)))))
-
-(defonce action-chan
-  (async/tap key-chan (chan 1 (keep keypress->action))))
+(defonce key-chan
+  (let [events (chan)
+        mult (async/mult events)]
+    (set! (.-onkeydown js/document) #(put! events [::down (.-which %)]))
+    (set! (.-onkeyup js/document) #(put! events [::up (.-which %)]))
+    {:moves (async/tap mult (chan 1 (filter move-filter)))
+     :actions (async/tap mult (chan 1 (keep keypress->action)))
+    }))
 
 (go-loop []
   (<! (async/timeout 500))
@@ -206,8 +206,8 @@
       (frp/map (fn [keys] [::move keys]) (frp/sample 8 moves))
       game-loop)
     
-    (async/pipe move-chan (frp/port key-stream))
-    (async/pipe action-chan game-loop)
+    (async/pipe (:moves key-chan) (frp/port key-stream))
+    (async/pipe (:actions key-chan) game-loop)
     ))
 
 
