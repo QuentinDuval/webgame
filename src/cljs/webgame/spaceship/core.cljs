@@ -170,22 +170,20 @@
     input-chan
     ))
 
-(defn move-filter
-  [e]
-  (-> e second #{DOWN RIGHT UP LEFT}))
+(def move-filter
+  (filter #(-> % second #{DOWN RIGHT UP LEFT})))
 
-(defn keypress->action
-  [k]
-  (get {[::up SPACE] [::fire]
-        [::up ESCAPE] [::pause]} k))
+(def to-action-xf
+  (keep #(get {[::up SPACE] [::fire]
+               [::up ESCAPE] [::pause]} %)))
 
 (defonce key-chan
   (let [events (chan)
         mult (async/mult events)]
     (set! (.-onkeydown js/document) #(put! events [::down (.-which %)]))
     (set! (.-onkeyup js/document) #(put! events [::up (.-which %)]))
-    {:moves (async/tap mult (chan 1 (filter move-filter)))
-     :actions (async/tap mult (chan 1 (keep keypress->action)))
+    {:moves (async/tap mult (chan 1 move-filter))
+     :actions (async/tap mult (chan 1 to-action-xf))
     }))
 
 (go-loop []
