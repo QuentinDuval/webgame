@@ -70,9 +70,7 @@
 (defn inside-board?
   "Checks whether an entity is still on the screen" 
   [entity]
-  (geom/contained?
-    {:x 0 :y 0 :w WIDTH :h HEIGHT}
-    entity))
+  (geom/contained? {:x 0 :y 0 :w WIDTH :h HEIGHT} entity))
 
 ;; ---------------------------------------------------
 
@@ -91,8 +89,7 @@
   (->>
     (keys->directions keys)
     (reduce #(command-move %1 %2) ship)
-    (force-in-board)
-    ))
+    (force-in-board)))
 
 (defn move-entity
   "Move an non-ship entity along the y axis"
@@ -132,8 +129,7 @@
     (update-in [:ship] move-ship keys)
     (update-in [:bullets] #(into [] (move-entity -2) %))
     (update-in [:asteroids] #(into [] (move-entity 2) %))
-    (handle-collisions)
-    ))
+    (handle-collisions)))
 
 ;; ---------------------------------------------------
 
@@ -141,15 +137,13 @@
   "Add a new bullet to the game, at the ship's position" 
   [{:keys [x y] :as ship}]
   (swap! game-state update-in [:bullets]
-    #(conj % {:x x :y y})
-    ))
+    #(conj % {:x x :y y})))
 
 (defn create-asteroid!
   "Create a new asteroid into the game" ;; TODO - Make them appear with strange directions 
   []
   (swap! game-state update-in [:asteroids]
-    #(conj % {:x (rand-int WIDTH) :y 0})
-    ))
+    #(conj % {:x (rand-int WIDTH) :y 0})))
 
 
 ;; ---------------------------------------------------
@@ -286,8 +280,8 @@
      (fn did-mount []
        (let [ship-canvas (canvas/init (js/document.getElementById "board") "2d")]
          (canvas/add-entity ship-canvas :game-entity (main-game-entity))
-         (canvas/draw-loop ship-canvas)
-         ))
+         (canvas/draw-loop ship-canvas)))
+     
      :reagent-render
      (fn render []
        [:div
