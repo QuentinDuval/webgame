@@ -132,17 +132,13 @@
         asteroids))
     ))
 
-(defn handle-collisions!
-  []
-  (swap! game-state
-    (fn [state]
-      (let [next-state
-            (-> state
-              (collisions-with :asteroids (:bullets state))
-              (collisions-with :bullets (:asteroids state)))
-            points (- (count (:asteroids state)) (count (:asteroids next-state)))]
-        (update-in next-state [:score] + points)
-        ))
+(defn handle-collisions
+  [state]
+  (let [next-state (-> state
+                     (collisions-with :asteroids (:bullets state))
+                     (collisions-with :bullets (:asteroids state)))
+        points (- (count (:asteroids state)) (count (:asteroids next-state)))]
+    (update-in next-state [:score] + points)
     ))
 
 ;; ---------------------------------------------------
@@ -162,8 +158,7 @@
                      (swap! game-state update-in [:ship] move-ship params)
                      (swap! game-state update-in [:bullets] #(into [] (move-entity -2) %))
                      (swap! game-state update-in [:asteroids] #(into [] (move-entity 2) %))
-                     (handle-collisions!)
-                     )
+                     (swap! game-state handle-collisions))
             
             ::fire (create-bullet! (:ship @game-state))
             ::pop-asteroid (create-asteroid!)
