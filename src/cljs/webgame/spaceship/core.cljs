@@ -148,9 +148,6 @@
     #(conj % {:x (rand-int WIDTH) :y 0})
     ))
 
-(defn switch-pause!
-  []
-  (swap! game-state update-in [:paused] not))
 
 ;; ---------------------------------------------------
 ;; EVENT STREAMS 
@@ -160,16 +157,15 @@
   (let [input-chan (chan)]
     (go-loop []
       (let [[evt params] (<! input-chan)]
-        (if (= (:paused @game-state) false)
-          (case evt
+        (if (= evt ::pause)
+          (swap! game-state update-in [:paused] not)
+          (when (= (:paused @game-state) false)
+            (case evt
             ::init (reset! game-state init-state)
             ::move (swap! game-state handle-tick params)
             ::fire (create-bullet! (:ship @game-state))
-            ::pop-asteroid (create-asteroid!)
-            ::pause (switch-pause!))
-          (case evt
-            ::pause (switch-pause!)
-            (prn "ignored")))
+            ::pop-asteroid (create-asteroid!))
+            ))
         (recur)))
     input-chan
     ))
