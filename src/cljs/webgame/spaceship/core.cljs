@@ -101,16 +101,6 @@
     (map #(command-move % [0 dy]))
     (filter inside-board?)))
 
-(defn move-entities!
-  []
-  (swap! game-state
-    (fn [state]
-      (-> state
-        (update-in [:bullets] #(into [] (move-entity -2) %))
-        (update-in [:asteroids] #(into [] (move-entity 2) %))
-        ))
-    ))
-
 (defn create-bullet!
   [{:keys [x y] :as ship}]
   (swap! game-state update-in [:bullets]
@@ -170,7 +160,8 @@
             ::init (reset! game-state init-state)
             ::move (do
                      (swap! game-state update-in [:ship] move-ship params)
-                     (move-entities!)
+                     (swap! game-state update-in [:bullets] #(into [] (move-entity -2) %))
+                     (swap! game-state update-in [:asteroids] #(into [] (move-entity 2) %))
                      (handle-collisions!)
                      )
             
