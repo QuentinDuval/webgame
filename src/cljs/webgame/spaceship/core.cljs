@@ -84,15 +84,13 @@
                  RIGHT [1 0]}]
     (keep #(get mapping %) keys)))
 
-(defn move-ship!
+(defn move-ship
   "Update the ship based on the commands pushed"
-  [keys]
-  (swap! game-state update-in [:ship]
-    (fn [ship]
-      (->>
-        (keys->directions keys)
-        (reduce #(command-move %1 %2) ship)
-        (force-in-board)))
+  [ship keys]
+  (->>
+    (keys->directions keys)
+    (reduce #(command-move %1 %2) ship)
+    (force-in-board)
     ))
 
 ;; ---------------------------------------------------
@@ -170,7 +168,12 @@
         (if (= (:paused @game-state) false)
           (case evt
             ::init (reset! game-state init-state)
-            ::move (do (move-ship! params) (move-entities!) (handle-collisions!))
+            ::move (do
+                     (swap! game-state update-in [:ship] move-ship params)
+                     (move-entities!)
+                     (handle-collisions!)
+                     )
+            
             ::fire (create-bullet! (:ship @game-state))
             ::pop-asteroid (create-asteroid!)
             ::pause (switch-pause!))
