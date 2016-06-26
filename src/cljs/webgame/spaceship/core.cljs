@@ -1,6 +1,6 @@
 (ns webgame.spaceship.core 
   (:require
-    [cljs.core.async :refer [put! chan <!]]
+    [cljs.core.async :refer [put! chan <! timeout]]
     [monet.canvas :as canvas]
     [monet.geometry :as geom]
     [reagent.core :as reagent :refer [atom]]
@@ -204,9 +204,10 @@
       (frp/constantly [::pause] (filter-key ESCAPE key-stream))
       game-loop)
     
-    (frp/subscribe
-      (frp/constantly [::pop-asteroid] (frp/sample 500 moves))
-      game-loop)
+    (go-loop []
+      (<! (timeout 500))
+      (>! game-loop [::pop-asteroid])
+      (recur))
     ))
 
 
