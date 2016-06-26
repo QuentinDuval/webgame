@@ -72,22 +72,26 @@
 
 ;; ---------------------------------------------------
 
-(def commands
-  [[UP #(command-move % [0 -1])]
-   [DOWN #(command-move % [0 1])]
-   [LEFT #(command-move % [-1 0])]
-   [RIGHT #(command-move % [1 0])]
-  ])
+(defn keys->commands
+  [keys]
+  (let [mapping [[UP #(command-move % [0 -1])]
+                 [DOWN #(command-move % [0 1])]
+                 [LEFT #(command-move % [-1 0])]
+                 [RIGHT #(command-move % [1 0])]]]
+    (map second (filter #(keys (first %)) mapping))
+    ))
 
 (defn move-ship!
   "Update the ship based on the commands pushed"
   [keys]
   (swap! game-state update-in [:ship]
-   (fn [ship]
-     (let [to-apply (map second (filter #(keys (first %)) commands))]
-       (force-in-board (reduce #(%2 %1) ship to-apply))
-       ))
-   ))
+    (fn [ship]
+      (->>
+        (keys->commands keys)
+        (reduce #(%2 %1) ship)
+        (force-in-board)
+        ))
+    ))
 
 ;; ---------------------------------------------------
 
