@@ -267,8 +267,7 @@
         (draw-bullet ctx b))
       (doseq [a (:asteroids state)]
         (draw-asteroid ctx a)) 
-      )
-    ))
+      )))
 
 ;; ---------------------------------------------------
 
