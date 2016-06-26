@@ -72,12 +72,12 @@
 
 ;; ---------------------------------------------------
 
-(defn keys->commands
+(defn keys->directions
   [keys]
-  (let [mapping {UP #(command-move % [0 -1])
-                 DOWN #(command-move % [0 1])
-                 LEFT #(command-move % [-1 0])
-                 RIGHT #(command-move % [1 0])}]
+  (let [mapping {UP [0 -1]
+                 DOWN [0 1]
+                 LEFT [-1 0]
+                 RIGHT [1 0]}]
     (keep #(get mapping %) keys)))
 
 (defn move-ship!
@@ -86,10 +86,9 @@
   (swap! game-state update-in [:ship]
     (fn [ship]
       (->>
-        (keys->commands keys)
-        (reduce #(%2 %1) ship)
-        (force-in-board)
-        ))
+        (keys->directions keys)
+        (reduce #(command-move %1 %2) ship)
+        (force-in-board)))
     ))
 
 ;; ---------------------------------------------------
