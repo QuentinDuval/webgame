@@ -94,6 +94,7 @@
     ))
 
 (defn move-entity
+  "Move an non-ship entity along the y axis"
   [dy]
   (comp
     (map #(command-move % [0 dy]))
@@ -101,11 +102,13 @@
 
 ;; ---------------------------------------------------
 
-(defn collide? ;; TODO - bad approximation here
+(defn collide?
+  "Simple collision system between a bullet and an asteroid" ;; TODO - Rework
   [lhs rhs]
   (> 10 (:dist (geom/distance lhs rhs))))
 
 (defn collisions-with
+  "Handle the collision of objects of type a with a list of obstacles" 
   [state obj-type obstacles]
   (update-in state [obj-type]
     (fn [asteroids]
@@ -117,6 +120,7 @@
 ;; TODO - When managing collision, take into account the fact that the asteroids are sorted by Y
 
 (defn handle-collisions
+  "Handle all collisions in the game, removing elements destroyed"
   [state]
   (let [next-state (-> state
                      (collisions-with :asteroids (:bullets state))
@@ -126,6 +130,7 @@
     ))
 
 (defn handle-tick
+  "Handle a tick in the game: player move, entity moves, collisions"
   [state keys]
   (-> state
     (update-in [:ship] move-ship keys)
