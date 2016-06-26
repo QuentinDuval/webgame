@@ -105,12 +105,15 @@
   [lhs rhs]
   (> 10 (:dist (geom/distance lhs rhs))))
 
+(defn not-any-collide?
+  "Indicates whether the entity collides with any of the obstacles"
+  [entity obstacles]
+  (not-any? #(collide? entity %) obstacles))
+
 (defn collisions-with
   "Handle the collision of a set of elements with a list of obstacles" 
   [elements obstacles]
-  (filter
-    (fn [a] (not-any? #(collide? a %) obstacles))
-    elements))
+  (filter #(not-any-collide? % obstacles) elements))
 
 (defn handle-collisions
   "Handle all collisions in the game, removing elements destroyed"
@@ -119,8 +122,9 @@
                      (update-in [:asteroids] collisions-with (:bullets state))
                      (update-in [:bullets] collisions-with (:asteroids state)))
         points (- (count (:asteroids state)) (count (:asteroids next-state)))]
-    (update-in next-state [:score] + points)
-    ))
+    (if (not-any-collide? (:ship next-state) (:asteroids next-state))
+      (update-in next-state [:score] + points)
+      init-state)))
 
 (defn handle-tick
   "Handle a tick in the game: player move, entity moves, collisions"
