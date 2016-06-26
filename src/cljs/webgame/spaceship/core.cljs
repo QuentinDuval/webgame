@@ -51,6 +51,7 @@
 ;; ---------------------------------------------------
 
 (defn command-move
+  "Move an entity along the vector [dx dy]" 
   [entity [dx dy]]
   (-> entity
     (update :x #(+ % dx))
@@ -58,13 +59,15 @@
     ))
 
 (defn force-in-board
-  [ship]
-  (-> ship
+  "Force the entity to stay on the screen" 
+  [entity]
+  (-> entity
     (update :x #(max (min % MAX-W) MIN-W))
     (update :y #(max (min % MIN-H) MAX-H))
     ))
 
 (defn inside-board?
+  "Checks whether an entity is still on the screen" 
   [entity]
   (geom/contained?
     {:x 0 :y 0 :w WIDTH :h HEIGHT}
@@ -73,6 +76,7 @@
 ;; ---------------------------------------------------
 
 (defn keys->directions
+  "Maps the movement keys to movement vectors"
   [keys]
   (let [mapping {UP [0 -1]
                  DOWN [0 1]
