@@ -108,23 +108,18 @@
   (> 10 (:dist (geom/distance lhs rhs))))
 
 (defn collisions-with
-  "Handle the collision of objects of type a with a list of obstacles" 
-  [state obj-type obstacles]
-  (update-in state [obj-type]
-    (fn [asteroids]
-      (filter
-        (fn [a] (not-any? #(collide? a %) obstacles))
-        asteroids))
-    ))
-
-;; TODO - When managing collision, take into account the fact that the asteroids are sorted by Y
+  "Handle the collision of a set of elements with a list of obstacles" 
+  [elements obstacles]
+  (filter
+    (fn [a] (not-any? #(collide? a %) obstacles))
+    elements))
 
 (defn handle-collisions
   "Handle all collisions in the game, removing elements destroyed"
   [state]
   (let [next-state (-> state
-                     (collisions-with :asteroids (:bullets state))
-                     (collisions-with :bullets (:asteroids state)))
+                     (update-in [:asteroids] collisions-with (:bullets state))
+                     (update-in [:bullets] collisions-with (:asteroids state)))
         points (- (count (:asteroids state)) (count (:asteroids next-state)))]
     (update-in next-state [:score] + points)
     ))
