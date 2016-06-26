@@ -93,31 +93,13 @@
     (force-in-board)
     ))
 
-;; ---------------------------------------------------
-
 (defn move-entity
   [dy]
   (comp
     (map #(command-move % [0 dy]))
     (filter inside-board?)))
 
-(defn create-bullet!
-  [{:keys [x y] :as ship}]
-  (swap! game-state update-in [:bullets]
-    #(conj % {:x x :y y})
-    ))
-
-(defn create-asteroid!
-  []
-  (swap! game-state update-in [:asteroids]
-    #(conj % {:x (rand-int WIDTH) :y 0})
-    ))
-
 ;; ---------------------------------------------------
-
-(defn switch-pause!
-  []
-  (swap! game-state update-in [:paused] not))
 
 (defn collide? ;; TODO - bad approximation here
   [lhs rhs]
@@ -132,6 +114,8 @@
         asteroids))
     ))
 
+;; TODO - When managing collision, take into account the fact that the asteroids are sorted by Y
+
 (defn handle-collisions
   [state]
   (let [next-state (-> state
@@ -141,11 +125,36 @@
     (update-in next-state [:score] + points)
     ))
 
+(defn handle-tick
+  [state keys]
+  (-> state
+    (update-in [:ship] move-ship keys)
+    (update-in [:bullets] #(into [] (move-entity -2) %))
+    (update-in [:asteroids] #(into [] (move-entity 2) %))
+    (handle-collisions)
+    ))
+
+;; ---------------------------------------------------
+
+(defn create-bullet!
+  [{:keys [x y] :as ship}]
+  (swap! game-state update-in [:bullets]
+    #(conj % {:x x :y y})
+    ))
+
+(defn create-asteroid!
+  []
+  (swap! game-state update-in [:asteroids]
+    #(conj % {:x (rand-int WIDTH) :y 0})
+    ))
+
+(defn switch-pause!
+  []
+  (swap! game-state update-in [:paused] not))
+
 ;; ---------------------------------------------------
 ;; EVENT STREAMS 
 ;; ---------------------------------------------------
-
-;; TODO - When managing collision, take into account the fact that the asteroids are sorted by Y
 
 (defonce game-loop
   (let [input-chan (chan)]
@@ -154,12 +163,7 @@
         (if (= (:paused @game-state) false)
           (case evt
             ::init (reset! game-state init-state)
-            ::move (do
-                     (swap! game-state update-in [:ship] move-ship params)
-                     (swap! game-state update-in [:bullets] #(into [] (move-entity -2) %))
-                     (swap! game-state update-in [:asteroids] #(into [] (move-entity 2) %))
-                     (swap! game-state handle-collisions))
-            
+            ::move (swap! game-state handle-tick params)
             ::fire (create-bullet! (:ship @game-state))
             ::pop-asteroid (create-asteroid!)
             ::pause (switch-pause!))
