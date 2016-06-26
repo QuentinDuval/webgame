@@ -15,6 +15,7 @@
 
 (def WIDTH 500)
 (def HEIGHT 500)
+(def POP-INTERVAL 500)
 
 (def SHIP-W 12)
 (def SHIP-H 22)
@@ -155,22 +156,6 @@
 ;; EVENT STREAMS 
 ;; ---------------------------------------------------
 
-(defonce game-loop
-  (let [input-chan (chan)]
-    (go-loop []
-      (let [[evt params] (<! input-chan)]
-        (if (= evt ::pause)
-          (swap! game-state update-in [:paused] not)
-          (when (= (:paused @game-state) false)
-            (case evt
-              ::init (reset! game-state init-state)
-              ::move (swap! game-state handle-tick params)
-              ::fire (create-bullet! (:ship @game-state))
-              ::pop-asteroid (create-asteroid!))
-            ))
-        (recur)))
-    input-chan))
-
 (def move-filter
   (filter #(-> % second #{DOWN RIGHT UP LEFT})))
 
@@ -187,11 +172,6 @@
      :actions (async/tap mult (chan 1 to-action-xf))
     }))
 
-(go-loop []
-  (<! (async/timeout 500))
-  (>! game-loop [::pop-asteroid])
-  (recur))
-
 (defonce moves-stream
   (let [stream (frp/events)]
     (async/pipe (:moves key-chan) (frp/port stream))
@@ -202,11 +182,37 @@
           ::up (disj keys k)))
       #{} stream)))
 
+
+;; ---------------------------------------------------
+;; CONNECTION TO GAME LOOP
+;; ---------------------------------------------------
+
+(defonce game-loop
+  (let [input-chan (chan)]
+    (go-loop []
+      (let [[evt params] (<! input-chan)]
+        (if (= evt ::pause)
+          (swap! game-state update-in [:paused] not)
+          (when (= (:paused @game-state) false)
+            (case evt
+              ::init (reset! game-state init-state)
+              ::move (swap! game-state handle-tick params)
+              ::fire (create-bullet! (:ship @game-state))
+              ::pop-asteroid (create-asteroid!))
+            ))
+        (recur)))
+    input-chan))
+
 (frp/subscribe
   (frp/map (fn [keys] [::move keys]) (frp/sample 8 moves-stream))
   game-loop)
 
 (async/pipe (:actions key-chan) game-loop)
+
+(go-loop []
+  (<! (async/timeout POP-INTERVAL))
+  (>! game-loop [::pop-asteroid])
+  (recur))
 
 
 ;; ---------------------------------------------------
