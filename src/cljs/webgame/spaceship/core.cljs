@@ -161,10 +161,10 @@
           (swap! game-state update-in [:paused] not)
           (when (= (:paused @game-state) false)
             (case evt
-            ::init (reset! game-state init-state)
-            ::move (swap! game-state handle-tick params)
-            ::fire (create-bullet! (:ship @game-state))
-            ::pop-asteroid (create-asteroid!))
+              ::init (reset! game-state init-state)
+              ::move (swap! game-state handle-tick params)
+              ::fire (create-bullet! (:ship @game-state))
+              ::pop-asteroid (create-asteroid!))
             ))
         (recur)))
     input-chan
