@@ -1,6 +1,6 @@
 (ns webgame.spaceship.core 
   (:require
-    [cljs.core.async :refer [put! chan <! timeout]]
+    [cljs.core.async :as async :refer [put! chan <!]]
     [monet.canvas :as canvas]
     [monet.geometry :as geom]
     [reagent.core :as reagent :refer [atom]]
@@ -180,9 +180,10 @@
     (set! (.-onkeyup js/document) #(frp/deliver events [::up (.-which %)]))
     events))
 
-(defn filter-key
-  [key stream]
-  (frp/filter #(= % [::up key]) stream))
+(defn keypress->action
+  [k]
+  (get {[::up SPACE] [::fire]
+        [::up ESCAPE] [::pause]} k))
 
 (defonce event-listener
   (let [moves (frp/reduce
@@ -190,22 +191,18 @@
                   (case msg
                     ::down (conj keys k)
                     ::up (disj keys k)))
-                #{} key-stream)]
+                #{} key-stream)]  
     
     (frp/subscribe
       (frp/map (fn [keys] [::move keys]) (frp/sample 8 moves))
       game-loop)
     
-    (frp/subscribe
-      (frp/constantly [::fire] (filter-key SPACE key-stream))
-      game-loop)
-    
-    (frp/subscribe
-      (frp/constantly [::pause] (filter-key ESCAPE key-stream))
+    (async/pipe
+      (frp/subscribe key-stream (chan 1 (keep keypress->action)))
       game-loop)
     
     (go-loop []
-      (<! (timeout 500))
+      (<! (async/timeout 500))
       (>! game-loop [::pop-asteroid])
       (recur))
     ))
