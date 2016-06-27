@@ -15,36 +15,40 @@
 (def HEIGHT 50)
 (def INTERVAL 25)
 
+;; TODO - Add configurable speed
 
 ;; ------------------------------------------------------
 ;; CREATING STRUCTURES
 ;; ------------------------------------------------------
 
-(defmulti new-structure
-  (fn [structure-id x y] structure-id))
+(defn glider
+  [x y]
+  (for [[dx dy] [[0 0] [1 1] [1 2] [0 2] [-1 2]]]
+    [(+ x dx) (+ y dy)]))
 
-(defmethod new-structure :square
-  [_ x y]
+(defn square
+  [x y]
   (for [dx [0 1]
         dy [0 1]]
     [(+ x dx) (+ y dy)]))
 
-(defmethod new-structure :glider
-  [_ x y]
-  (for [[dx dy] [[0 0] [1 1] [1 2] [0 2] [-1 2]]]
-    [(+ x dx) (+ y dy)]))
-
-(defmethod new-structure :star
-  [_ x y]
+(defn star
+  [x y]
   (for [dx [-1 0 1]]
     [(+ x dx) y]))
+
+(def structure-mapping
+  {:glider glider
+   :square square
+   :star star})
+
+(defn new-structure
+  [structure-id x y]
+  ((structure-mapping structure-id) x y))
 
 
 ;; ------------------------------------------------------
 ;; GAME MECHANICS
-;; - Edit / Observe mode (pause)
-;; - Add elements by user click
-;; - Configurable speed (ticks)
 ;; ------------------------------------------------------
 
 (defonce game-state
@@ -124,9 +128,8 @@
    [:select#selector
     {:value (name selected)
      :on-change #(on-select (-> % .-target .-value keyword))}
-    [:option "glider"]
-    [:option "square"]
-    [:option "star"]]
+    (for [[k _] structure-mapping]
+      [:option (name k)])]
    ])
 
 
