@@ -15,6 +15,7 @@
   [:div.app
    [:h1 "Available games"]
    [:ul
+    [game-item "/life" "Game of life"]
     [game-item "/spaceship" "Space Ship"]
     [game-item "/tictactoe" "Tic Tac Toe"]
    ]])

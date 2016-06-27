@@ -64,7 +64,14 @@
                         :output-dir "resources/public/js/compiled/out/spaceship"
                         :source-map-timestamp true}}
             
-
+            :game-of-life
+            {:source-paths ["src/cljs"]
+             :figwheel true
+             :compiler {:main webgame.life.core
+                        :asset-path "js/compiled/out/life"
+                        :output-to "resources/public/js/compiled/life.js"
+                        :output-dir "resources/public/js/compiled/out/life"
+                        :source-map-timestamp true}}
             }}
 
   :figwheel {:server-port 3449
@@ -115,6 +122,12 @@
                   :pretty-print false}}
                 
                 :spaceship
+                {:source-paths ^:replace ["src/cljs"]
+                 :compiler
+                 {:optimizations :advanced
+                  :pretty-print false}}
+                
+                :game-of-life
                 {:source-paths ^:replace ["src/cljs"]
                  :compiler
                  {:optimizations :advanced

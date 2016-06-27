@@ -1,0 +1,21 @@
+h1
+{
+	font-weight: 100;
+	color: #30343d;
+	font-size: 32px;
+}
+
+body
+{
+  	background: #f9f9f9;
+  	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  	font-weight: 100;
+  	font-size: 14px;
+}
+
+#board
+{
+	background: #fff;
+	padding: 10px 10px;
+	position: relative;
+}

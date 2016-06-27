@@ -19,6 +19,7 @@
 
 (defroutes routes
   (GET "/" _ (html-content "public/index.html"))
+  (GET "/life" _ (html-content "public/life.html"))
   (GET "/spaceship" _ (html-content "public/spaceship.html"))
   (GET "/tictactoe" _ (html-content "public/tictactoe.html"))
   (resources "/"))
