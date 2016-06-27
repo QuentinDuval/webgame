@@ -16,6 +16,23 @@
 
 
 ;; ------------------------------------------------------
+;; Interesting structures
+;; ------------------------------------------------------
+
+(defn square
+  [x y]
+  (for [dx [0 1]
+        dy [0 1]]
+    [(+ x dx) (+ y dy)]))
+
+(defn glider
+  "Creates a glider at position (x,y)"
+  [x y]
+  (for [[dx dy] [[0 0] [1 1] [1 2] [0 2] [-1 2]]]
+    [(+ x dx) (+ y dy)]))
+
+
+;; ------------------------------------------------------
 ;; GAME MECHANICS
 ;; - Edit / Observe mode (pause)
 ;; - Add elements by user click
@@ -24,9 +41,9 @@
 
 (defonce game-state
   (atom
-    #{[5 5] [5 6] [6 5] [6 6] ;; Stable structure
-      [10 10] [11 11] [11 12] [10 12] [9 12] ;; Glider
-      }))
+    (into #{}
+      (glider 10 10)
+      )))
 
 (defn in-board?
   "Checks whether a cell is in the board"
