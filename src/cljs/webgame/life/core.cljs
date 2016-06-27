@@ -121,11 +121,10 @@
 (defn game-of-life
   []
   (let [structure (reagent/cursor game-state [:structure])]
-    (fn []
-      [:div
-       [:h1 "Game of life"]
-       [structures @structure #(reset! structure %)]
-       [draw-board (:board @game-state)]])
+    [:div
+     [:h1 "Game of life"]
+     [structures @structure #(reset! structure %)]
+     [draw-board (:board @game-state)]]
     ))
 
 (reagent/render [game-of-life]
