@@ -29,12 +29,12 @@
       }))
 
 (defn in-board?
+  "Checks whether a cell is in the board"
   [[x y]]
-  (and
-    (<= 0 x) (<= 0 y) (< x WIDTH) (< y HEIGHT)
-    ))
+  (and (<= 0 x) (<= 0 y) (< x WIDTH) (< y HEIGHT)))
 
 (defn neighbors
+  "Compute the neighbors of a cell"
   [[x y :as old]]
   (for [dx [0 1 -1]
         dy [0 1 -1]
@@ -43,6 +43,7 @@
     new))
 
 (defn next-turn
+  "Compute the next board state based on the previous"
   [board]
   (set
     (for [[pos n] (frequencies (mapcat neighbors board))
@@ -50,6 +51,8 @@
       pos)))
 
 
+;; ------------------------------------------------------
+;; EVENT STREAMS
 ;; ------------------------------------------------------
 
 (defonce start-ticks
