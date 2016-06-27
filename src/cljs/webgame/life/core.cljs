@@ -31,6 +31,12 @@
   (for [[dx dy] [[0 0] [1 1] [1 2] [0 2] [-1 2]]]
     [(+ x dx) (+ y dy)]))
 
+(defn new-structure
+  [structure-id x y]
+  (case structure-id
+    :glider (glider x y)
+    :square (square x y)))
+
 
 ;; ------------------------------------------------------
 ;; GAME MECHANICS
@@ -106,7 +112,7 @@
 
 
 ;; ------------------------------------------------------
-;; ENTRY POINT
+;; STRUCTURE SELECTION
 ;; ------------------------------------------------------
 
 (defn structures
@@ -120,12 +126,17 @@
     [:option "square"]]
    ])
 
+
+;; ------------------------------------------------------
+;; ENTRY POINT
+;; ------------------------------------------------------
+
 (defn game-of-life
   []
   (let [board (reagent/cursor game-state [:board])
         structure (reagent/cursor game-state [:structure])
         on-select #(reset! structure %)
-        on-add #(swap! board conj [%1 %2])]
+        on-add #(swap! board into (new-structure @structure %1 %2))]
     (fn []
       [:div
        [:h1 "Game of life"]
