@@ -23,7 +23,10 @@
 ;; ------------------------------------------------------
 
 (defonce game-state
-  (atom #{[5 5] [5 6] [6 5] [6 6]}))
+  (atom
+    #{[5 5] [5 6] [6 5] [6 6] ;; Stable structure
+      [10 10] [11 11] [11 12] [10 12] [9 12] ;; Glider
+      }))
 
 (defn in-board?
   [[x y]]
@@ -41,14 +44,17 @@
 
 (defn next-turn
   [board]
-  (into #{} (mapcat neighbors) board))
+  (set
+    (for [[pos n] (frequencies (mapcat neighbors board))
+          :when (or (= n 3) (and (= n 2) (board pos)))]
+      pos)))
 
 
 ;; ------------------------------------------------------
 
 (defonce start-ticks
   (go-loop []
-    (<! (async/timeout 500))
+    (<! (async/timeout 100))
     (swap! game-state #'next-turn)
     (recur)))
 
