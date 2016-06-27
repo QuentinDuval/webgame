@@ -84,22 +84,25 @@
 ;; ------------------------------------------------------
 
 (defn draw-cell
-  [color x y]
-  [:rect {:width 1 :height 1 :x x :y y :fill color}])
+  [color on-click x y]
+  [:rect {:width 1 :height 1
+          :x x :y y
+          :fill color
+          :on-click on-click}])
 
 (def empty-cell (partial draw-cell "white"))
 (def filled-cell (partial draw-cell "black"))
 
 (defn draw-board
-  [board]
+  [board on-click]
   (into 
     [:svg#board {:view-box (str "0 0 " WIDTH " " HEIGHT)}]
     (for [x (range WIDTH)
           y (range HEIGHT)]
       ^{:key [x y]}
       (if (board [x y])
-        [empty-cell x y]
-        [filled-cell x y])
+        [empty-cell on-click x y]
+        [filled-cell on-click x y])
       )))
 
 
@@ -120,11 +123,15 @@
 
 (defn game-of-life
   []
-  (let [structure (reagent/cursor game-state [:structure])]
-    [:div
-     [:h1 "Game of life"]
-     [structures @structure #(reset! structure %)]
-     [draw-board (:board @game-state)]]
+  (let [board (reagent/cursor game-state [:board])
+        structure (reagent/cursor game-state [:structure])
+        on-select #(reset! structure %)
+        on-add #(js/alert (str %))]
+    (fn []
+      [:div
+       [:h1 "Game of life"]
+       [structures @structure on-select]
+       [draw-board @board on-add]])
     ))
 
 (reagent/render [game-of-life]
