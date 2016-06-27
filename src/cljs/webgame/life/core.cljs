@@ -16,34 +16,27 @@
 
 
 ;; ------------------------------------------------------
-;; Interesting structures
+;; CREATING STRUCTURES
 ;; ------------------------------------------------------
 
-(defn square
-  "Creates a square at position (x,y)"
-  [x y]
+(defmulti new-structure
+  (fn [structure-id x y] structure-id))
+
+(defmethod new-structure :square
+  [_ x y]
   (for [dx [0 1]
         dy [0 1]]
     [(+ x dx) (+ y dy)]))
 
-(defn glider
-  "Creates a glider at position (x,y)"
-  [x y]
+(defmethod new-structure :glider
+  [_ x y]
   (for [[dx dy] [[0 0] [1 1] [1 2] [0 2] [-1 2]]]
     [(+ x dx) (+ y dy)]))
 
-(defn star
-  "Creates a blinking star at position (x,y)"
-  [x y]
+(defmethod new-structure :star
+  [_ x y]
   (for [dx [-1 0 1]]
     [(+ x dx) y]))
-
-(defn new-structure
-  [structure-id x y]
-  (case structure-id
-    :glider (glider x y)
-    :square (square x y)
-    :star (star x y)))
 
 
 ;; ------------------------------------------------------
@@ -55,7 +48,7 @@
 
 (defonce game-state
   (atom
-    {:board (into #{} (glider 10 10))
+    {:board (into #{} (new-structure :glider 10 10))
      :structure :glider
      }))
 
