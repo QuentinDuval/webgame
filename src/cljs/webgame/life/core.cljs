@@ -83,7 +83,7 @@
 (defonce start-ticks
   (go-loop []
     (<! (async/timeout INTERVAL))
-    (swap! game-state update :board #'next-turn)
+    (swap! game-state update :board next-turn)
     (recur)))
 
 
