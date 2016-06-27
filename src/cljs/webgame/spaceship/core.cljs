@@ -74,22 +74,17 @@
 
 ;; ---------------------------------------------------
 
-(defn keys->directions
-  "Maps the movement keys to movement vectors"
-  [keys]
-  (let [mapping {UP [0 -1]
-                 DOWN [0 1]
-                 LEFT [-1 0]
-                 RIGHT [1 0]}]
-    (keep #(get mapping %) keys)))
+(def keys->directions
+  (keep #(get {UP [0 -1]
+               DOWN [0 1]
+               LEFT [-1 0]
+               RIGHT [1 0]} %)))
 
 (defn move-ship
   "Update the ship based on the commands pushed"
   [ship keys]
-  (->>
-    (keys->directions keys)
-    (reduce #(command-move %1 %2) ship)
-    (force-in-board)))
+  (force-in-board
+    (transduce keys->directions command-move ship keys)))
 
 (defn move-entity
   "Move an non-ship entity along the y axis"
