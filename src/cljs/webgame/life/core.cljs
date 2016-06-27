@@ -42,6 +42,7 @@
 (defonce game-state
   (atom
     {:board (into #{} (glider 10 10))
+     :structure :glider
      }))
 
 (defn in-board?
@@ -106,11 +107,26 @@
 ;; ENTRY POINT
 ;; ------------------------------------------------------
 
+(defn structures
+  [selected on-select]
+  [:div#structure
+   [:span "Select structure"]
+   [:select#selector
+    {:value (name selected)
+     :on-change #(on-select (-> % .-target .-value keyword))}
+    [:option "glider"]
+    [:option "square"]]
+   ])
+
 (defn game-of-life
   []
-  [:div
-   [:h1 "Game of life"]
-   [draw-board (:board @game-state)]])
+  (let [structure (reagent/cursor game-state [:structure])]
+    (fn []
+      [:div
+       [:h1 "Game of life"]
+       [structures @structure #(reset! structure %)]
+       [draw-board (:board @game-state)]])
+    ))
 
 (reagent/render [game-of-life]
   (js/document.getElementById "app"))
