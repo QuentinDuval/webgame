@@ -13,6 +13,19 @@
 
 
 ;; ------------------------------------------------------
+;; GAME MECHANICS
+;; - Edit / Observe mode (pause)
+;; - Add elements by user click
+;; - Configurable speed (ticks)
+;; ------------------------------------------------------
+
+(defonce game-state
+  (atom #{[5 5] [5 6] [6 5]}))
+
+
+
+
+;; ------------------------------------------------------
 ;; DRAWING
 ;; ------------------------------------------------------
 
@@ -24,13 +37,13 @@
 (def filled-cell (partial draw-cell "black"))
 
 (defn draw-board
-  []
+  [board]
   (into 
     [:svg#board {:view-box (str "0 0 " WIDTH " " HEIGHT)}]
     (for [x (range WIDTH)
           y (range HEIGHT)]
       ^{:key [x y]}
-      (if (odd? (+ x y))
+      (if (board [x y])
         [empty-cell x y]
         [filled-cell x y])
       )))
@@ -44,7 +57,7 @@
   []
   [:div
    [:h1 "Game of life"]
-   [draw-board]])
+   [draw-board @game-state]])
 
 (reagent/render [game-of-life]
   (js/document.getElementById "app"))
