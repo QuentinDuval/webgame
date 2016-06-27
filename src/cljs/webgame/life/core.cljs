@@ -13,6 +13,7 @@
 
 (def WIDTH 50)
 (def HEIGHT 50)
+(def INTERVAL 25)
 
 
 ;; ------------------------------------------------------
@@ -81,7 +82,7 @@
 
 (defonce start-ticks
   (go-loop []
-    (<! (async/timeout 20))
+    (<! (async/timeout INTERVAL))
     (swap! game-state update :board #'next-turn)
     (recur)))
 
