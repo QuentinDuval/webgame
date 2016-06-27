@@ -23,12 +23,25 @@
 ;; ------------------------------------------------------
 
 (defonce game-state
-  (atom #{[5 5] [5 6] [6 5]}))
+  (atom #{[5 5] [5 6] [6 5] [6 6]}))
 
+(defn in-board?
+  [[x y]]
+  (and
+    (<= 0 x) (<= 0 y) (< x WIDTH) (< y HEIGHT)
+    ))
+
+(defn neighbors
+  [[x y :as old]]
+  (for [dx [0 1 -1]
+        dy [0 1 -1]
+        :let [[x' y' :as new] [(+ x dx) (+ y dy)]]
+        :when (and (not= old new) (in-board? new))]
+    new))
 
 (defn next-turn
   [board]
-  (conj board [(rand-int WIDTH) (rand-int HEIGHT)]))
+  (into #{} (mapcat neighbors) board))
 
 
 ;; ------------------------------------------------------
@@ -36,7 +49,7 @@
 (defonce start-ticks
   (go-loop []
     (<! (async/timeout 500))
-    (swap! game-state next-turn)
+    (swap! game-state #'next-turn)
     (recur)))
 
 
