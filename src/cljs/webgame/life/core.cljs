@@ -16,6 +16,7 @@
 (def INTERVAL 100)
 
 ;; TODO - Add configurable speed
+;; TODO - Do not use svg but canvas
 
 ;; ------------------------------------------------------
 ;; CREATING STRUCTURES
