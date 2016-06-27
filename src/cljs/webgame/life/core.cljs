@@ -1,6 +1,9 @@
 (ns webgame.life.core
   (:require
-    [reagent.core :as reagent :refer [atom]]
+    [cljs.core.async :as async :refer [put! chan <!]]
+    [reagent.core :as reagent :refer [atom]])
+  (:require-macros
+    [cljs.core.async.macros :refer [go go-loop]]
     ))
 
 
@@ -23,6 +26,18 @@
   (atom #{[5 5] [5 6] [6 5]}))
 
 
+(defn next-turn
+  [board]
+  (conj board [(rand-int WIDTH) (rand-int HEIGHT)]))
+
+
+;; ------------------------------------------------------
+
+(defonce start-ticks
+  (go-loop []
+    (<! (async/timeout 500))
+    (swap! game-state next-turn)
+    (recur)))
 
 
 ;; ------------------------------------------------------
