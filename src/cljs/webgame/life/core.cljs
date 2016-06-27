@@ -86,9 +86,8 @@
 (defn draw-cell
   [color on-click x y]
   [:rect {:width 1 :height 1
-          :x x :y y
-          :fill color
-          :on-click on-click}])
+          :x x :y y :fill color
+          :on-click #(on-click x y)}])
 
 (def empty-cell (partial draw-cell "white"))
 (def filled-cell (partial draw-cell "black"))
@@ -126,7 +125,7 @@
   (let [board (reagent/cursor game-state [:board])
         structure (reagent/cursor game-state [:structure])
         on-select #(reset! structure %)
-        on-add #(js/alert (str %))]
+        on-add #(swap! board conj [%1 %2])]
     (fn []
       [:div
        [:h1 "Game of life"]
