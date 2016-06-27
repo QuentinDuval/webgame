@@ -13,7 +13,7 @@
 
 (def WIDTH 50)
 (def HEIGHT 50)
-(def INTERVAL 25)
+(def INTERVAL 100)
 
 ;; TODO - Add configurable speed
 
@@ -37,10 +37,17 @@
   (for [dx [-1 0 1]]
     [(+ x dx) y]))
 
+(defn toad
+  [x y]
+  (for [dx [0 1 2]
+        ds [0 -1]]
+    [(+ x dx ds) (+ y ds)]))
+
 (def structure-mapping
   {:glider glider
    :square square
-   :star star})
+   :star star
+   :toad toad})
 
 (defn new-structure
   [structure-id x y]
