@@ -41,9 +41,8 @@
 
 (defonce game-state
   (atom
-    (into #{}
-      (glider 10 10)
-      )))
+    {:board (into #{} (glider 10 10))
+     }))
 
 (defn in-board?
   "Checks whether a cell is in the board"
@@ -75,7 +74,7 @@
 (defonce start-ticks
   (go-loop []
     (<! (async/timeout 100))
-    (swap! game-state #'next-turn)
+    (swap! game-state update :board #'next-turn)
     (recur)))
 
 
@@ -111,7 +110,7 @@
   []
   [:div
    [:h1 "Game of life"]
-   [draw-board @game-state]])
+   [draw-board (:board @game-state)]])
 
 (reagent/render [game-of-life]
   (js/document.getElementById "app"))
