@@ -20,6 +20,7 @@
 ;; ------------------------------------------------------
 
 (defn square
+  "Creates a square at position (x,y)"
   [x y]
   (for [dx [0 1]
         dy [0 1]]
@@ -31,11 +32,18 @@
   (for [[dx dy] [[0 0] [1 1] [1 2] [0 2] [-1 2]]]
     [(+ x dx) (+ y dy)]))
 
+(defn star
+  "Creates a blinking star at position (x,y)"
+  [x y]
+  (for [dx [-1 0 1]]
+    [(+ x dx) y]))
+
 (defn new-structure
   [structure-id x y]
   (case structure-id
     :glider (glider x y)
-    :square (square x y)))
+    :square (square x y)
+    :star (star x y)))
 
 
 ;; ------------------------------------------------------
@@ -123,7 +131,8 @@
     {:value (name selected)
      :on-change #(on-select (-> % .-target .-value keyword))}
     [:option "glider"]
-    [:option "square"]]
+    [:option "square"]
+    [:option "star"]]
    ])
 
 
