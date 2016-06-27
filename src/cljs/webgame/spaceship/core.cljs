@@ -122,9 +122,12 @@
                      (update-in [:asteroids] collisions-with (:bullets state))
                      (update-in [:bullets] collisions-with (:asteroids state)))
         points (- (count (:asteroids state)) (count (:asteroids next-state)))]
-    (if (not-any-collide? (:ship next-state) (:asteroids next-state))
-      (update-in next-state [:score] + points)
-      init-state)))
+    (update-in next-state [:score] + points)))
+
+(defn handle-end-game
+  "Check whether the ship is destroyed by an asteroid"
+  [{:keys [ship asteroids] :as state}]
+  (if (not-any-collide? ship asteroids) state init-state))
 
 (defn handle-tick
   "Handle a tick in the game: player move, entity moves, collisions"
@@ -133,7 +136,8 @@
     (update-in [:ship] move-ship keys)
     (update-in [:bullets] #(into [] (move-entity -2) %))
     (update-in [:asteroids] #(into [] (move-entity 2) %))
-    (handle-collisions)))
+    (handle-collisions)
+    (handle-end-game)))
 
 ;; ---------------------------------------------------
 
