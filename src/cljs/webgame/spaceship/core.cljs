@@ -119,10 +119,10 @@
   "Handle all collisions in the game, removing elements destroyed"
   [state]
   (let [next-state (-> state
-                     (update-in [:asteroids] collisions-with (:bullets state))
-                     (update-in [:bullets] collisions-with (:asteroids state)))
+                     (update :asteroids collisions-with (:bullets state))
+                     (update :bullets collisions-with (:asteroids state)))
         points (- (count (:asteroids state)) (count (:asteroids next-state)))]
-    (update-in next-state [:score] + points)))
+    (update next-state :score + points)))
 
 (defn handle-end-game
   "Check whether the ship is destroyed by an asteroid"
@@ -133,9 +133,9 @@
   "Handle a tick in the game: player move, entity moves, collisions"
   [state keys]
   (-> state
-    (update-in [:ship] move-ship keys)
-    (update-in [:bullets] #(into [] (move-entity -2) %))
-    (update-in [:asteroids] #(into [] (move-entity 2) %))
+    (update :ship move-ship keys)
+    (update :bullets #(into [] (move-entity -2) %))
+    (update :asteroids #(into [] (move-entity 2) %))
     (handle-collisions)
     (handle-end-game)))
 
@@ -144,13 +144,13 @@
 (defn create-bullet!
   "Add a new bullet to the game, at the ship's position" 
   [{:keys [x y] :as ship}]
-  (swap! game-state update-in [:bullets]
+  (swap! game-state update :bullets
     #(conj % {:x x :y y})))
 
 (defn create-asteroid!
   "Create a new asteroid into the game" ;; TODO - Make them appear with strange directions 
   []
-  (swap! game-state update-in [:asteroids]
+  (swap! game-state update :asteroids
     #(conj % {:x (rand-int WIDTH) :y 0})))
 
 
@@ -194,7 +194,7 @@
     (go-loop []
       (let [[evt params] (<! input-chan)]
         (if (= evt ::pause)
-          (swap! game-state update-in [:paused] not)
+          (swap! game-state update :paused not)
           (when (= (:paused @game-state) false)
             (case evt
               ::init (reset! game-state init-state)
