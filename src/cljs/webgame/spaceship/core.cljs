@@ -103,7 +103,7 @@
 (defn collide?
   "Simple collision system between a bullet and an asteroid" ;; TODO - Rework
   [lhs rhs]
-  (> 10 (:dist (geom/distance lhs rhs))))
+  (geom/in-radius? lhs rhs 10))
 
 (defn not-any-collide?
   "Indicates whether the entity collides with any of the obstacles"
