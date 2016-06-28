@@ -149,8 +149,7 @@
 (defn with-mouse-pos
   [handler]
   (fn [e]
-    (let [canvas-elem (js/document.getElementById "board")
-          rect (.getBoundingClientRect canvas-elem)]
+    (let [rect (-> "board" js/document.getElementById .getBoundingClientRect)]
       (handler
         (quot (- (.-pageX e) (.-left rect)) SCALE)
         (quot (- (.-pageY e) (.-top rect)) SCALE))
@@ -158,12 +157,11 @@
 
 (defn render-board
   []
-  (let [on-select #(reset! structure %)
-        on-add #(swap! board into (new-structure @structure %1 %2))]
+  (let [on-add #(swap! board into (new-structure @structure %1 %2))]
     (fn []
       [:div
        [:h1 "Game of life"]
-       [structures @structure on-select]
+       [structures @structure #(reset! structure %)]
        [:canvas#board
         {:width (* SCALE WIDTH)
          :height (* SCALE HEIGHT)
