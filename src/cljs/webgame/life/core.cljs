@@ -148,12 +148,13 @@
 
 (defn with-mouse-pos
   [handler]
-  (let [canvas-elem (js/document.getElementById "board")]
-    (fn [e]
+  (fn [e]
+    (let [canvas-elem (js/document.getElementById "board")
+          rect (.getBoundingClientRect canvas-elem)]
       (handler
-        (quot (.-pageX e) SCALE)
-        (quot (.-pageY e) SCALE)))
-    ))
+        (quot (- (.-pageX e) (.-left rect)) SCALE)
+        (quot (- (.-pageY e) (.-top rect)) SCALE))
+      )))
 
 (defn render-board
   []
