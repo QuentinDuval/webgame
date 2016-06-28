@@ -1,6 +1,7 @@
 (ns webgame.life.core
   (:require
     [cljs.core.async :as async :refer [put! chan <!]]
+    [monet.canvas :as canvas]
     [reagent.core :as reagent :refer [atom]])
   (:require-macros
     [cljs.core.async.macros :refer [go go-loop]]
@@ -11,12 +12,12 @@
 ;; PARAMETERS
 ;; ------------------------------------------------------
 
-(def WIDTH 50)
-(def HEIGHT 50)
-(def INTERVAL 100)
+(def WIDTH 120)
+(def HEIGHT 120)
+(def SCALE 5)
+(def INTERVAL 80)
 
 ;; TODO - Add configurable speed
-;; TODO - Do not use svg but canvas
 
 ;; ------------------------------------------------------
 ;; CREATING STRUCTURES
@@ -62,8 +63,10 @@
 (defonce game-state
   (atom
     {:board (into #{} (new-structure :glider 10 10))
-     :structure :glider
-     }))
+     :structure :glider}))
+
+(def board (reagent/cursor game-state [:board]))
+(def structure (reagent/cursor game-state [:structure]))
 
 (defn in-board?
   "Checks whether a cell is in the board"
@@ -104,24 +107,22 @@
 ;; ------------------------------------------------------
 
 (defn draw-cell
-  [color on-click x y]
-  [:rect {:width 1 :height 1
-          :x x :y y :fill color
-          :on-click #(on-click x y)}])
-
-(def empty-cell (partial draw-cell "white"))
-(def filled-cell (partial draw-cell "black"))
+  [ctx [x y :as cell]]
+  (-> ctx
+    (canvas/save)
+    (canvas/translate (* SCALE x) (* SCALE y))
+    (canvas/fill-style "white")
+    (canvas/fill-rect {:x 0 :y 0 :w SCALE :h SCALE})
+    (canvas/restore)))
 
 (defn draw-board
-  [board on-click]
-  (into 
-    [:svg#board {:view-box (str "0 0 " WIDTH " " HEIGHT)}]
-    (for [x (range WIDTH)
-          y (range HEIGHT)]
-      ^{:key [x y]}
-      (if (board [x y])
-        [empty-cell on-click x y]
-        [filled-cell on-click x y])
+  "Create a display ship entity for the provided ship atom"
+  []
+  (canvas/entity
+    (:board @game-state)
+    (fn [_] (:board @game-state))
+    (fn [ctx board]
+      (doseq [c board] (draw-cell ctx c)) 
       )))
 
 
@@ -145,18 +146,30 @@
 ;; ENTRY POINT
 ;; ------------------------------------------------------
 
-(defn game-of-life
+(defn render-board
   []
-  (let [board (reagent/cursor game-state [:board])
-        structure (reagent/cursor game-state [:structure])
-        on-select #(reset! structure %)
-        on-add #(swap! board into (new-structure @structure %1 %2))]
+  (let [on-select #(reset! structure %)
+        on-add #(swap! board into (new-structure @structure %1 %2))
+        on-click #(on-add (quot (.-pageX %) SCALE) (quot (.-pageY %) SCALE))]
     (fn []
       [:div
        [:h1 "Game of life"]
        [structures @structure on-select]
-       [draw-board @board on-add]])
+       [:canvas#board
+        {:width (* SCALE WIDTH)
+         :height (* SCALE HEIGHT)
+         :on-click on-click}
+        ]])
     ))
+
+(def game-of-life
+  (with-meta render-board
+    {:component-did-mount
+     (fn []
+       (let [board-canvas (canvas/init (js/document.getElementById "board") "2d")]
+         (canvas/add-entity board-canvas :board (draw-board))
+         (canvas/draw-loop board-canvas)))
+     }))
 
 (reagent/render [game-of-life]
   (js/document.getElementById "app"))
