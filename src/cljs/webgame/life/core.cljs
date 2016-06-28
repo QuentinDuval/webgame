@@ -146,11 +146,19 @@
 ;; ENTRY POINT
 ;; ------------------------------------------------------
 
+(defn with-mouse-pos
+  [handler]
+  (let [canvas-elem (js/document.getElementById "board")]
+    (fn [e]
+      (handler
+        (quot (.-pageX e) SCALE)
+        (quot (.-pageY e) SCALE)))
+    ))
+
 (defn render-board
   []
   (let [on-select #(reset! structure %)
-        on-add #(swap! board into (new-structure @structure %1 %2))
-        on-click #(on-add (quot (.-pageX %) SCALE) (quot (.-pageY %) SCALE))]
+        on-add #(swap! board into (new-structure @structure %1 %2))]
     (fn []
       [:div
        [:h1 "Game of life"]
@@ -158,7 +166,7 @@
        [:canvas#board
         {:width (* SCALE WIDTH)
          :height (* SCALE HEIGHT)
-         :on-click on-click}
+         :on-click (with-mouse-pos on-add)}
         ]])
     ))
 
