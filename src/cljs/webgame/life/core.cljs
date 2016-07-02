@@ -86,17 +86,15 @@
 
 (defn stay-alive?
   "Given the board, indicates whether a cell with a given number of neighbor shall live"
-  [board]
-  (fn [[cell n]]
-    (or (= n 3) (and (= n 2) (board cell)))
-    ))
+  [board [cell n]]
+  (or (= n 3) (and (= n 2) (board cell))))
 
 (defn next-turn
   "Compute the next board state based on the previous"
   [board]
   (into #{}
     (comp
-      (filter (stay-alive? board))
+      (filter (partial stay-alive? board))
       (map first)
       (filter in-board?))
     (frequencies (mapcat neighbors board))
