@@ -75,40 +75,23 @@
   [[x y]]
   (and (<= 0 x) (<= 0 y) (< x WIDTH) (< y HEIGHT)))
 
-#_(defn neighbors
- "Compute the neighbors of a cell"
- [[x y :as old]]
- (for [dx [0 1 -1]
-       dy [0 1 -1]
-       :let [[x' y' :as new] [(+ x dx) (+ y dy)]]
-       :when (and (not= old new) (in-board? new))]
-   new))
+(def neighbor-matrix
+  (rest (for [dx [0 1 -1] dy [0 1 -1]] [dx dy])))
 
 (defn neighbors
   "Compute the neighbors of a cell"
-  [[x y :as old]]
-  [[(dec x) (inc y)] [x (inc y)] [(inc x) (inc y)]
-   [(dec x) y] [(inc x) y]
-   [(dec x) (dec y)] [x (dec y)] [(inc x) (dec y)]])
+  [[x y]]
+  (map (fn [[dx dy]] [(+ x dx) (+ y dy)])
+    neighbor-matrix))
 
 (defn next-turn
   "Compute the next board state based on the previous"
   [board]
-  (set
+  (into #{}
+    (filter in-board?)
     (for [[pos n] (frequencies (mapcat neighbors board))
           :when (or (= n 3) (and (= n 2) (board pos)))]
       pos)))
-
-#_(defn next-turn
-  "Compute the next board state based on the previous"
-  [board]
-  (into #{} 
-    (comp
-       (map (fn [[c ns]] [c (count ns)]))
-       (filter (fn [[c n]] (or (= n 3) (and (= n 2) (board c)))))
-       (map first))
-     (group-by identity (mapcat neighbors board))
-     ))
 
 
 ;; ------------------------------------------------------
