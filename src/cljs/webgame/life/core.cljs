@@ -116,11 +116,6 @@
     (sort (mapcat neighbors board)) ;; Using frequencies is a bit slower
     ))
 
-
-;; ------------------------------------------------------
-;; EVENT STREAMS
-;; ------------------------------------------------------
-
 (defonce start-ticks
   (go-loop []
     (<! (async/timeout INTERVAL))
@@ -129,15 +124,8 @@
 
 
 ;; ------------------------------------------------------
-;; DRAWING
+;; CANVAS
 ;; ------------------------------------------------------
-
-(defn draw-cell
-  [ctx [x y :as cell]]
-  (-> ctx
-    (canvas/fill-style "white")
-    (canvas/fill-rect {:x (* SCALE x) :y (* SCALE y) :w SCALE :h SCALE})
-    ))
 
 (defn draw-board
   "Create a display ship entity for the provided ship atom"
@@ -146,12 +134,23 @@
     (:board @game-state)
     (fn [_] (:board @game-state))
     (fn [ctx board]
-      (doseq [c board] (draw-cell ctx c)) 
+      (canvas/fill-style ctx "white")
+      (doseq [[x y] board]
+        (canvas/fill-rect ctx {:x (* SCALE x) :y (* SCALE y) :w SCALE :h SCALE})) 
+      )))
+
+(defn with-mouse-pos
+  [handler]
+  (fn [e]
+    (let [rect (-> "board" js/document.getElementById .getBoundingClientRect)]
+      (handler
+        (quot (- (.-pageX e) (.-left rect)) SCALE)
+        (quot (- (.-pageY e) (.-top rect)) SCALE))
       )))
 
 
 ;; ------------------------------------------------------
-;; STRUCTURE SELECTION
+;; ENTRY POINT
 ;; ------------------------------------------------------
 
 (defn structures
@@ -164,20 +163,6 @@
     (for [[k _] structure-mapping]
       [:option (name k)])]
    ])
-
-
-;; ------------------------------------------------------
-;; ENTRY POINT
-;; ------------------------------------------------------
-
-(defn with-mouse-pos
-  [handler]
-  (fn [e]
-    (let [rect (-> "board" js/document.getElementById .getBoundingClientRect)]
-      (handler
-        (quot (- (.-pageX e) (.-left rect)) SCALE)
-        (quot (- (.-pageY e) (.-top rect)) SCALE))
-      )))
 
 (defn render-board
   []
