@@ -84,14 +84,23 @@
   (map (fn [[dx dy]] [(+ x dx) (+ y dy)])
     neighbor-matrix))
 
+(defn stay-alive?
+  "Given the board, indicates whether a cell with a given number of neighbor shall live"
+  [board]
+  (fn [[cell n]]
+    (or (= n 3) (and (= n 2) (board cell)))
+    ))
+
 (defn next-turn
   "Compute the next board state based on the previous"
   [board]
   (into #{}
-    (filter in-board?)
-    (for [[pos n] (frequencies (mapcat neighbors board))
-          :when (or (= n 3) (and (= n 2) (board pos)))]
-      pos)))
+    (comp
+      (filter (stay-alive? board))
+      (map first)
+      (filter in-board?))
+    (frequencies (mapcat neighbors board))
+    ))
 
 
 ;; ------------------------------------------------------
