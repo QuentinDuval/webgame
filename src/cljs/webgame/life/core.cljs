@@ -62,10 +62,11 @@
 ;; GAME STATE
 ;; ------------------------------------------------------
 
+(def init-board
+  (into #{} (new-structure :glider 10 10)))
+
 (defonce game-state
-  (atom
-    {:board (into #{} (new-structure :glider 10 10))
-     :structure :glider}))
+  (atom {:board init-board :structure :glider}))
 
 (def board (reagent/cursor game-state [:board]))
 (def structure (reagent/cursor game-state [:structure]))
@@ -91,26 +92,19 @@
 
 (defn stay-alive?
   "Given the board, indicates whether a cell with a given number of neighbor shall live"
-  [board [cell n]]
+  [board cell n]
   (or (= n 3) (and (= n 2) (board cell))))
-
-(defn neighbor-frequencies
-  [board]
-  (transduce
-    (mapcat neighbors)
-    #(update %1 %2 inc)
-    {} board))
 
 (defn next-turn
   "Compute the next board state based on the previous"
   [board]
   (into #{}
     (comp
-      (filter (partial stay-alive? board))
+      (partition-by identity)
+      (filter #(stay-alive? board (first %) (count %)))
       (map first)
       (filter in-board?))
-    ;(neighbor-frequencies board)
-    (frequencies (mapcat neighbors board))
+    (sort (mapcat neighbors board))
     ))
 
 
