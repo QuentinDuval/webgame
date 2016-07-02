@@ -36,6 +36,12 @@
         dy [0 1]]
     [(+ x dx) (+ y dy)]))
 
+(defn beacon
+  [x y]
+  (concat
+    (square (- x 2) (- y 2))
+    (square x y)))
+
 (defn star
   [x y]
   (for [dx [-1 0 1]]
@@ -48,7 +54,8 @@
     [(+ x dx ds) (+ y ds)]))
 
 (def structure-mapping
-  {:glider glider
+  {:beacon beacon
+   :glider glider
    :square square
    :star star
    :toad toad})
