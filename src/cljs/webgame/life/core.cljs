@@ -104,7 +104,7 @@
       (filter #(stay-alive? board (first %) (count %)))
       (map first)
       (filter in-board?))
-    (sort (mapcat neighbors board))
+    (sort (mapcat neighbors board)) ;; Using frequencies is a bit slower
     ))
 
 
@@ -115,7 +115,7 @@
 (defonce start-ticks
   (go-loop []
     (<! (async/timeout INTERVAL))
-    (time (swap! game-state update :board next-turn))
+    (swap! game-state update :board next-turn)
     (recur)))
 
 
@@ -126,11 +126,13 @@
 (defn draw-cell
   [ctx [x y :as cell]]
   (-> ctx
-    (canvas/save)
-    (canvas/translate (* SCALE x) (* SCALE y))
+    ;(canvas/save)
+    ;(canvas/translate (* SCALE x) (* SCALE y))
     (canvas/fill-style "white")
-    (canvas/fill-rect {:x 0 :y 0 :w SCALE :h SCALE})
-    (canvas/restore)))
+    (canvas/fill-rect {:x (* SCALE x) :y (* SCALE y) :w SCALE :h SCALE})
+    ;(canvas/fill-rect {:x 0 :y 0 :w SCALE :h SCALE})
+    ;(canvas/restore)
+    ))
 
 (defn draw-board
   "Create a display ship entity for the provided ship atom"
