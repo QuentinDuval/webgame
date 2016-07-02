@@ -95,6 +95,15 @@
   [board cell n]
   (or (= n 3) (and (= n 2) (board cell))))
 
+#_(defn next-turn
+   "Compute the next board state based on the previous"
+   [board]
+   (into #{}
+     (filter in-board?)
+     (for [[cell n] (frequencies (mapcat neighbors board))
+           :when (stay-alive? board cell n)]
+       cell)))
+
 (defn next-turn
   "Compute the next board state based on the previous"
   [board]
@@ -126,12 +135,8 @@
 (defn draw-cell
   [ctx [x y :as cell]]
   (-> ctx
-    ;(canvas/save)
-    ;(canvas/translate (* SCALE x) (* SCALE y))
     (canvas/fill-style "white")
     (canvas/fill-rect {:x (* SCALE x) :y (* SCALE y) :w SCALE :h SCALE})
-    ;(canvas/fill-rect {:x 0 :y 0 :w SCALE :h SCALE})
-    ;(canvas/restore)
     ))
 
 (defn draw-board
