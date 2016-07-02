@@ -59,7 +59,7 @@
 
 
 ;; ------------------------------------------------------
-;; GAME MECHANICS
+;; GAME STATE
 ;; ------------------------------------------------------
 
 (defonce game-state
@@ -69,6 +69,11 @@
 
 (def board (reagent/cursor game-state [:board]))
 (def structure (reagent/cursor game-state [:structure]))
+
+
+;; ------------------------------------------------------
+;; GAME MECHANICS
+;; ------------------------------------------------------
 
 (defn in-board?
   "Checks whether a cell is in the board"
