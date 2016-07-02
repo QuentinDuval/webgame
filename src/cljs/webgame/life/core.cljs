@@ -94,22 +94,12 @@
   [board [cell n]]
   (or (= n 3) (and (= n 2) (board cell))))
 
-(defn fast-frequencies
-  [coll]
-  (into {} ;; TODO - Use transduce - or js->clj
-    (reduce
-      #_(fn [counts x]
-        (let [c (or (aget counts x) 0)]
-          (aset counts x (inc c))
-          ))
-      (fn [counts x]
-        (let [c (get counts x 0)]
-          (assoc counts x (inc c))
-          ))
-      ;(clj->js {})
-      {}
-      coll)
-    ))
+(defn neighbor-frequencies
+  [board]
+  (transduce
+    (mapcat neighbors)
+    #(update %1 %2 inc)
+    {} board))
 
 (defn next-turn
   "Compute the next board state based on the previous"
@@ -119,8 +109,8 @@
       (filter (partial stay-alive? board))
       (map first)
       (filter in-board?))
-    ;(frequencies (mapcat neighbors board))
-    (fast-frequencies (mapcat neighbors board))
+    ;(neighbor-frequencies board)
+    (frequencies (mapcat neighbors board))
     ))
 
 
