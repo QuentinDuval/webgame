@@ -6,20 +6,18 @@
   (:require-macros
     [cljs.core.async.macros :refer [go go-loop]]))
 
-(enable-console-print!)
-
 
 ;; ------------------------------------------------------
 ;; PARAMETERS
 ;; ------------------------------------------------------
 
-(def WIDTH 120)
-(def HEIGHT 120)
-(def SCALE 5)
-(def MIN-INTERVAL 40)
-(def MAX-INTERVAL 120)
-(def RNG-INTERVAL (- MAX-INTERVAL MIN-INTERVAL))
-(def INTERVAL (+ (quot RNG-INTERVAL 2) MIN-INTERVAL))
+(def ^:const WIDTH 120)
+(def ^:const HEIGHT 120)
+(def ^:const SCALE 5)
+(def ^:const MIN-INTERVAL 40)
+(def ^:const MAX-INTERVAL 120)
+(def ^:const RNG-INTERVAL (- MAX-INTERVAL MIN-INTERVAL))
+(def ^:const INTERVAL (+ (quot RNG-INTERVAL 2) MIN-INTERVAL))
 
 
 ;; ------------------------------------------------------
