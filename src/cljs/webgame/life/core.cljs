@@ -150,8 +150,8 @@
     {:value (name selected)
      :on-change #(on-select (-> % .-target .-value keyword))}
     (for [[k _] structure-mapping]
-      [:option (name k)])]
-   ])
+      [:option (name k)])
+    ]])
 
 (defn render-board
   []
