@@ -18,7 +18,8 @@
 (def SCALE 5)
 (def MIN-INTERVAL 40)
 (def MAX-INTERVAL 120)
-(def INTERVAL (quot (+ MIN-INTERVAL MAX-INTERVAL) 2))
+(def RNG-INTERVAL (- MAX-INTERVAL MIN-INTERVAL))
+(def INTERVAL (+ (quot RNG-INTERVAL 2) MIN-INTERVAL))
 
 
 ;; ------------------------------------------------------
@@ -160,29 +161,27 @@
       [:option (name k)])
     ]])
 
+(defn speed->interval
+  [s]
+  (- MAX-INTERVAL (quot (* RNG-INTERVAL s) 100)))
+
 (defn time-interval
   [on-change]
   [:div#structure
    [:span "Time inverval"]
    [:input
-    {:type "range"
-     :min MIN-INTERVAL
-     :max MAX-INTERVAL
-     :value @interval
-     :on-change #(-> % .-target .-value on-change)}
+    {:type "range" :min 0 :max 100
+     :on-change #(-> % .-target .-value speed->interval on-change)}
     ]])
 
 (defn render-board
   []
-  (let [on-add #(swap! board into (new-structure @structure %1 %2))
-        on-interval-change (fn [e]
-                             (println e)
-                             (reset! interval e))]
+  (let [on-add #(swap! board into (new-structure @structure %1 %2))]
     (fn []
       [:div
        [:h1 "Game of life"]
        [structures @structure #(reset! structure %)]
-       [time-interval on-interval-change] 
+       [time-interval #(reset! interval %)] 
        [:canvas#board
         {:width (* SCALE WIDTH)
          :height (* SCALE HEIGHT)
