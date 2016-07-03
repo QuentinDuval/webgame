@@ -165,12 +165,17 @@
   [s]
   (- MAX-INTERVAL (quot (* RNG-INTERVAL s) 100)))
 
+(defn interval->speed
+  [i]
+  (quot (* (- MAX-INTERVAL i) 100) RNG-INTERVAL))
+
 (defn time-interval
-  [on-change]
+  [interval on-change]
   [:div#structure
-   [:span "Time inverval"]
+   [:span "Time interval"]
    [:input
     {:type "range" :min 0 :max 100
+     :value (interval->speed interval)
      :on-change #(-> % .-target .-value speed->interval on-change)}
     ]])
 
@@ -181,7 +186,7 @@
       [:div
        [:h1 "Game of life"]
        [structures @structure #(reset! structure %)]
-       [time-interval #(reset! interval %)] 
+       [time-interval @interval #(reset! interval %)] 
        [:canvas#board
         {:width (* SCALE WIDTH)
          :height (* SCALE HEIGHT)
