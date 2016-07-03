@@ -13,23 +13,23 @@
 
 ;; ---------------------------------------------------
 
-(def WIDTH 500)
-(def HEIGHT 500)
-(def POP-INTERVAL 500)
+(def ^:const WIDTH 500)
+(def ^:const HEIGHT 500)
+(def ^:const POP-INTERVAL 500)
 
-(def SHIP-W 12)
-(def SHIP-H 22)
-(def MAX-W (- WIDTH SHIP-W))
-(def MIN-W SHIP-W)
-(def MAX-H SHIP-H)
-(def MIN-H 500)
+(def ^:const SHIP-W 12)
+(def ^:const SHIP-H 22)
+(def ^:const MAX-W (- WIDTH SHIP-W))
+(def ^:const MIN-W SHIP-W)
+(def ^:const MAX-H SHIP-H)
+(def ^:const MIN-H 500)
 
-(def DOWN 40)
-(def RIGHT 39)
-(def UP 38)
-(def LEFT 37)
-(def SPACE 32)
-(def ESCAPE 27)
+(def ^:const DOWN 40)
+(def ^:const RIGHT 39)
+(def ^:const UP 38)
+(def ^:const LEFT 37)
+(def ^:const SPACE 32)
+(def ^:const ESCAPE 27)
 
 
 ;; ---------------------------------------------------
@@ -221,6 +221,7 @@
   [ctx ship]
   (-> ctx
     (canvas/save)
+    (canvas/fill-style "black")
     (canvas/translate (:x ship) (:y ship))
     (canvas/begin-path)
     (canvas/move-to (- SHIP-W) 0)
@@ -233,26 +234,25 @@
 (defn draw-bullet
   [ctx bullet]
   (-> ctx
-    (canvas/save)
-    (canvas/translate (:x bullet) (:y bullet))
     (canvas/fill-style "red")
-    (canvas/fill-rect {:x -3 :y (- (+ SHIP-H 3)) :w 6 :h 6})
-    (canvas/restore)
-    ))
+    (canvas/fill-rect
+      {:x (- (:x bullet) 3)
+       :y (- (:y bullet) (+ SHIP-H 3))
+       :w 6 :h 6})))
 
 (defn draw-asteroid
   [ctx asteroid]
   (-> ctx
-    (canvas/save)
-    (canvas/translate (:x asteroid) (:y asteroid))
     (canvas/fill-style "green")
-    (canvas/fill-rect {:x -10 :y -10 :w 20 :h 20})
-    (canvas/restore)
-    )) 
+    (canvas/fill-rect
+      {:x (- (:x asteroid) 10)
+       :y (- (:y asteroid) 10)
+       :w 20 :h 20}))) 
 
 (defn draw-score
   [ctx score]
   (-> ctx
+    (canvas/fill-style "black")
     (canvas/font-style "30px Arial")
     (canvas/text {:text (str score) :x (- WIDTH 80) :y 40})
     ))
