@@ -2,13 +2,9 @@
   (:require
     [cljs.core.async :as async :refer [put! chan <!]]
     [monet.canvas :as canvas]
-    [reagent.core :as reagent :refer [atom]])
-  (:require-macros
-    [cljs.core.async.macros :refer [go go-loop]]
+    [reagent.core :as reagent :refer [atom]]
     ))
 
-
-(enable-console-print!)
 
 ;; ------------------------------------------------------
 ;; PARAMETERS
@@ -32,8 +28,7 @@
 
 (defn square
   [x y]
-  (for [dx [0 1]
-        dy [0 1]]
+  (for [dx [0 1] dy [0 1]]
     [(+ x dx) (+ y dy)]))
 
 (defn beacon
@@ -49,8 +44,7 @@
 
 (defn toad
   [x y]
-  (for [dx [0 1 2]
-        ds [0 -1]]
+  (for [dx [0 1 2] ds [0 -1]]
     [(+ x dx ds) (+ y ds)]))
 
 (def structure-mapping
@@ -102,15 +96,6 @@
   [board cell n]
   (or (= n 3) (and (= n 2) (board cell))))
 
-#_(defn next-turn
-   "Compute the next board state based on the previous"
-   [board]
-   (into #{}
-     (filter in-board?)
-     (for [[cell n] (frequencies (mapcat neighbors board))
-           :when (stay-alive? board cell n)]
-       cell)))
-
 (defn next-turn
   "Compute the next board state based on the previous"
   [board]
@@ -124,10 +109,8 @@
     ))
 
 (defonce start-ticks
-  (go-loop []
-    (<! (async/timeout INTERVAL))
-    (swap! game-state update :board next-turn)
-    (recur)))
+  (js/setInterval
+    #(swap! game-state update :board next-turn) INTERVAL))
 
 
 ;; ------------------------------------------------------
@@ -147,13 +130,12 @@
       )))
 
 (defn with-mouse-pos
-  [handler]
-  (fn [e]
-    (let [rect (-> "board" js/document.getElementById .getBoundingClientRect)]
-      (handler
-        (quot (- (.-pageX e) (.-left rect)) SCALE)
-        (quot (- (.-pageY e) (.-top rect)) SCALE))
-      )))
+  [handler e]
+  (let [rect (-> "board" js/document.getElementById .getBoundingClientRect)]
+    (handler
+      (quot (- (.-pageX e) (.-left rect)) SCALE)
+      (quot (- (.-pageY e) (.-top rect)) SCALE))
+    ))
 
 
 ;; ------------------------------------------------------
@@ -181,17 +163,16 @@
        [:canvas#board
         {:width (* SCALE WIDTH)
          :height (* SCALE HEIGHT)
-         :on-click (with-mouse-pos on-add)}
+         :on-click #(with-mouse-pos on-add %)}
         ]])
     ))
 
 (def game-of-life
   (with-meta render-board
     {:component-did-mount
-     (fn []
-       (let [board-canvas (canvas/init (js/document.getElementById "board") "2d")]
-         (canvas/add-entity board-canvas :board (draw-board))
-         (canvas/draw-loop board-canvas)))
+     #(let [board-canvas (canvas/init (js/document.getElementById "board") "2d")]
+        (canvas/add-entity board-canvas :board (draw-board))
+        (canvas/draw-loop board-canvas))
      }))
 
 (reagent/render [game-of-life]
