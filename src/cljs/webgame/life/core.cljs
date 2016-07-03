@@ -2,8 +2,11 @@
   (:require
     [cljs.core.async :as async :refer [put! chan <!]]
     [monet.canvas :as canvas]
-    [reagent.core :as reagent :refer [atom]]
-    ))
+    [reagent.core :as reagent :refer [atom]])
+  (:require-macros
+    [cljs.core.async.macros :refer [go go-loop]]))
+
+(enable-console-print!)
 
 
 ;; ------------------------------------------------------
@@ -13,9 +16,10 @@
 (def WIDTH 120)
 (def HEIGHT 120)
 (def SCALE 5)
-(def INTERVAL 80)
+(def MIN-INTERVAL 40)
+(def MAX-INTERVAL 120)
+(def INTERVAL (quot (+ MIN-INTERVAL MAX-INTERVAL) 2))
 
-;; TODO - Add configurable speed
 
 ;; ------------------------------------------------------
 ;; CREATING STRUCTURES
@@ -67,9 +71,10 @@
   (into #{} (new-structure :glider 10 10)))
 
 (defonce game-state
-  (atom {:board init-board :structure :glider}))
+  (atom {:board init-board :interval INTERVAL :structure :glider}))
 
 (def board (reagent/cursor game-state [:board]))
+(def interval (reagent/cursor game-state [:interval]))
 (def structure (reagent/cursor game-state [:structure]))
 
 
@@ -109,8 +114,10 @@
     ))
 
 (defonce start-ticks
-  (js/setInterval
-    #(swap! game-state update :board next-turn) INTERVAL))
+  (go-loop []
+    (<! (async/timeout @interval))
+    (go (swap! game-state update :board next-turn))
+    (recur)))
 
 
 ;; ------------------------------------------------------
@@ -148,18 +155,34 @@
    [:span "Select structure"]
    [:select#selector
     {:value (name selected)
-     :on-change #(on-select (-> % .-target .-value keyword))}
+     :on-change #(-> % .-target .-value keyword on-select)}
     (for [[k _] structure-mapping]
       [:option (name k)])
     ]])
 
+(defn time-interval
+  [on-change]
+  [:div#structure
+   [:span "Time inverval"]
+   [:input
+    {:type "range"
+     :min MIN-INTERVAL
+     :max MAX-INTERVAL
+     :value @interval
+     :on-change #(-> % .-target .-value on-change)}
+    ]])
+
 (defn render-board
   []
-  (let [on-add #(swap! board into (new-structure @structure %1 %2))]
+  (let [on-add #(swap! board into (new-structure @structure %1 %2))
+        on-interval-change (fn [e]
+                             (println e)
+                             (reset! interval e))]
     (fn []
       [:div
        [:h1 "Game of life"]
        [structures @structure #(reset! structure %)]
+       [time-interval on-interval-change] 
        [:canvas#board
         {:width (* SCALE WIDTH)
          :height (* SCALE HEIGHT)
